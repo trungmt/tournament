@@ -12,7 +12,7 @@ interface IRefreshToken {
   refresh_token: string;
 }
 
-interface IUser extends IUserJson {
+export interface IUser extends IUserJson {
   password?: string;
   refresh_tokens?: IRefreshToken[];
   avatar?: Buffer;
@@ -25,7 +25,19 @@ interface IUserModel extends Model<IUser> {
     username: string,
     password: string
   ): Promise<IUser & Document<any, any, IUser>>;
+
+  checkRefreshToken(refresh_token: string): Promise<string>;
 }
+
+const generateToken = (
+  payload: IUserJson,
+  secret: string,
+  expiresIn?: string
+): string => {
+  return expiresIn !== undefined
+    ? jwt.sign(payload, secret, { expiresIn })
+    : jwt.sign(payload, secret);
+};
 
 const userSchema = new Schema<IUser, IUserModel, IUser>(
   {
@@ -74,6 +86,51 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
+// -- schema static methods --
+userSchema.statics.checkLogin = async (
+  username: string,
+  password: string
+): Promise<IUser & Document<any, any, IUser>> => {
+  const user = await UserModel.findOne({ username });
+  if (!user) {
+    throw new Error('Unable to login');
+  }
+
+  const isMatch = await bcryptjs.compare(password, user.password!);
+  if (!isMatch) {
+    throw new Error('Unable to login');
+  }
+
+  return user!;
+};
+
+userSchema.statics.checkRefreshToken = async (
+  refresh_token: string
+): Promise<string> => {
+  const userJSON = jwt.verify(
+    refresh_token,
+    process.env.REFRESH_TOKEN_SECRET!
+  ) as IUserJson;
+
+  if (!userJSON._id) {
+    throw new Error('Unable to refresh access_token');
+  }
+
+  const user = await UserModel.findOne({
+    _id: userJSON._id,
+    'refresh_tokens.refresh_token': refresh_token,
+  });
+
+  if (!user) {
+    throw new Error('Unable to refresh access_token');
+  }
+
+  return user!.generateAccessToken();
+};
+
+// -- END schema static methods --
+
+// -- schema document methods --
 userSchema.methods.toJSON = function (): IUserJson {
   // TODO: write a plugin to reduce values should be shown when call toJSON
   const userObject = this.toObject();
@@ -83,16 +140,6 @@ userSchema.methods.toJSON = function (): IUserJson {
     username: userObject.username,
     name: userObject.name,
   };
-};
-
-const generateToken = (
-  payload: IUserJson,
-  secret: string,
-  expiresIn?: string
-): string => {
-  return expiresIn !== undefined
-    ? jwt.sign(payload, secret, { expiresIn })
-    : jwt.sign(payload, secret);
 };
 
 userSchema.methods.generateAccessToken = function (): string {
@@ -128,22 +175,7 @@ userSchema.methods.generateAccessToken = function (): string {
   return access_token;
 };
 
-userSchema.statics.checkLogin = async (
-  username: string,
-  password: string
-): Promise<IUser & Document<any, any, IUser>> => {
-  const user = await UserModel.findOne({ username });
-  if (!user) {
-    throw new Error('Unable to login');
-  }
-
-  const isMatch = await bcryptjs.compare(password, user.password!);
-  if (!isMatch) {
-    throw new Error('Unable to login');
-  }
-
-  return user!;
-};
+// -- END schema document methods --
 
 const UserModel = model<IUser, IUserModel>('User', userSchema);
 
