@@ -13,7 +13,8 @@
     "skipLibCheck": true,                           /* Skip type checking of declaration files. */
     "forceConsistentCasingInFileNames": true,        /* Disallow inconsistently-cased references to the same file. */
     "typeRoots": [
-      "src/types/express-auth-middleware.d.ts","node_modules/@types"
+      "./src/types",
+      "./node_modules/@types",
     ],
   }
 }
