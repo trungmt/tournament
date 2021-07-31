@@ -9,12 +9,12 @@ export interface IUserJson {
 }
 
 interface IRefreshToken {
-  refresh_token: string;
+  refreshToken: string;
 }
 
 export interface IUser extends IUserJson {
   password?: string;
-  refresh_tokens?: IRefreshToken[];
+  refreshTokens?: IRefreshToken[];
   avatar?: Buffer;
   generateAccessToken(): string;
   generateRefreshToken(): Promise<string>;
@@ -26,7 +26,7 @@ interface IUserModel extends Model<IUser> {
     password: string
   ): Promise<IUser & Document<any, any, IUser>>;
 
-  checkRefreshToken(refresh_token: string): Promise<string>;
+  checkRefreshToken(refreshToken: string): Promise<string>;
 }
 
 const generateToken = (
@@ -59,9 +59,9 @@ const userSchema = new Schema<IUser, IUserModel, IUser>(
       trim: true,
       minLength: 8,
     },
-    refresh_tokens: [
+    refreshTokens: [
       {
-        refresh_token: {
+        refreshToken: {
           type: String,
           required: true,
         },
@@ -105,24 +105,24 @@ userSchema.statics.checkLogin = async (
 };
 
 userSchema.statics.checkRefreshToken = async (
-  refresh_token: string
+  refreshToken: string
 ): Promise<string> => {
   const userJSON = jwt.verify(
-    refresh_token,
+    refreshToken,
     process.env.REFRESH_TOKEN_SECRET!
   ) as IUserJson;
 
   if (!userJSON._id) {
-    throw new Error('Unable to refresh access_token');
+    throw new Error('Unable to refresh accessToken');
   }
 
   const user = await UserModel.findOne({
     _id: userJSON._id,
-    'refresh_tokens.refresh_token': refresh_token,
+    'refreshTokens.refreshToken': refreshToken,
   });
 
   if (!user) {
-    throw new Error('Unable to refresh access_token');
+    throw new Error('Unable to refresh accessToken');
   }
 
   return user!.generateAccessToken();
@@ -152,27 +152,27 @@ userSchema.methods.generateRefreshToken = async function (): Promise<string> {
   const userJSON = this.toJSON();
   const user = this;
 
-  const refresh_token = generateToken(
+  const refreshToken = generateToken(
     userJSON,
     process.env.REFRESH_TOKEN_SECRET!,
     '10d'
   );
 
-  user.refresh_tokens = user.refresh_tokens?.concat({ refresh_token });
+  user.refreshTokens = user.refreshTokens?.concat({ refreshToken });
   await user.save();
 
-  return refresh_token;
+  return refreshToken;
 };
 
 userSchema.methods.generateAccessToken = function (): string {
   const userJSON = this.toJSON();
 
-  const access_token = generateToken(
+  const accessToken = generateToken(
     userJSON,
     process.env.ACCESS_TOKEN_SECRET!,
-    '15s'
+    '1d'
   );
-  return access_token;
+  return accessToken;
 };
 
 // -- END schema document methods --

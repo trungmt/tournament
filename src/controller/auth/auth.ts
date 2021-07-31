@@ -6,13 +6,13 @@ export const login = async (req: Request, res: Response) => {
   const { username, password } = req.body;
   try {
     const user = await User.checkLogin(username, password);
-    const access_token = user.generateAccessToken();
-    const refresh_token = await user.generateRefreshToken();
+    const accessToken = user.generateAccessToken();
+    const refreshToken = await user.generateRefreshToken();
 
     const responseJson = {
       user,
-      access_token,
-      refresh_token,
+      accessToken,
+      refreshToken,
     };
     res.status(200).send(responseJson);
   } catch (error) {
@@ -25,13 +25,13 @@ export const register = async (req: Request, res: Response) => {
   const user = new User(userFormData);
   try {
     await user.save();
-    const access_token = user.generateAccessToken();
-    const refresh_token = await user.generateRefreshToken();
+    const accessToken = user.generateAccessToken();
+    const refreshToken = await user.generateRefreshToken();
 
     const responseJson = {
       user,
-      access_token,
-      refresh_token,
+      accessToken,
+      refreshToken,
     };
     res.status(201).send(responseJson);
   } catch (error) {
@@ -40,20 +40,19 @@ export const register = async (req: Request, res: Response) => {
 };
 
 export const logout = (req: Request, res: Response) => {
-  const { refresh_token } = req.body;
+  const { refreshToken } = req.body;
 };
 
 export const refresh = async (req: Request, res: Response) => {
-  const { refresh_token } = req.body;
-
+  const { refreshToken } = req.body;
   try {
-    const access_token = await User.checkRefreshToken(refresh_token);
-    res.status(200).send({ access_token });
+    const accessToken = await User.checkRefreshToken(refreshToken);
+    res.status(200).send({ accessToken });
   } catch (error) {
     console.log('error', error);
     if (
       error instanceof TokenExpiredError ||
-      error.message == 'Unable to refresh access_token'
+      error.message == 'Unable to refresh accessToken'
     ) {
       return res.status(403).send();
     }
