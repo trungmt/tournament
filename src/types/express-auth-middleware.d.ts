@@ -19,7 +19,7 @@ declare module 'express' {
   export interface Request {
     token?: string;
     user?: Query<
-      IUser & Document<any, any, IUser>,
+      (IUser & Document<any, any, IUser>) | null,
       IUser & Document<any, any, IUser>,
       {},
       IUser

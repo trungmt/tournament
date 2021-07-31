@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt, { JsonWebTokenError } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import User, { IUserJson } from '../model/user';
 
 const auth = async (req: Request, res: Response, next: NextFunction) => {
