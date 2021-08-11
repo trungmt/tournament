@@ -1,32 +1,42 @@
-import { Schema, model, Model, SchemaTypes } from 'mongoose';
+import { Schema, model, Model, Types } from 'mongoose';
 
-interface ITeam {
+export interface ITeamDoc {
+  _id: Types._ObjectId;
   name: string;
   permalink: string;
+  nameDisplay: string;
   flagIcon?: Schema.Types.Buffer;
 }
-interface ITeamModel extends Model<ITeam> {}
+interface ITeamModel extends Model<ITeamDoc> {}
 
-const teamSchema = new Schema<ITeam, ITeamModel, ITeam>(
+const validatePermalinkPattern = function (permalink: string) {
+  return /^([a-zA-Z0-9]+-)*[a-zA-Z0-9]+$/.test(permalink);
+};
+
+const teamSchema = new Schema<ITeamDoc, ITeamModel, ITeamDoc>(
   {
     name: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
+      unique: true,
+    },
+    nameDisplay: {
+      type: String,
+      required: true,
     },
     permalink: {
       type: String,
       required: true,
-      unique: true,
       lowercase: true,
+      unique: true,
       trim: true,
-      validate: {
-        validator: (permalink: string) => {
-          return /^([a-zA-Z0-9]+-)*[a-zA-Z0-9]+$/.test(permalink);
+      validate: [
+        {
+          validator: validatePermalinkPattern,
+          message: 'Permalink only accepts alphanumeric and dash',
         },
-        message: 'Permalink only accepts alphanumeric and dash',
-      },
+      ],
     },
     flagIcon: {
       type: Schema.Types.Buffer,
@@ -37,6 +47,15 @@ const teamSchema = new Schema<ITeam, ITeamModel, ITeam>(
   }
 );
 
-const TeamModel = model<ITeam>('Team', teamSchema);
+teamSchema.pre('validate', function (next) {
+  const team = this;
+  console.log('team', team);
+
+  team.nameDisplay = team.name;
+  team.name = team.name.toLowerCase();
+  next();
+});
+
+const TeamModel = model<ITeamDoc, ITeamModel>('Team', teamSchema);
 
 export default TeamModel;
