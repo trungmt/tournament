@@ -35,7 +35,7 @@ export const register = async (req: Request, res: Response) => {
     };
     res.status(201).send(responseJson);
   } catch (error) {
-    res.status(400).send();
+    res.status(400).send(error);
   }
 };
 
@@ -45,11 +45,11 @@ export const logout = (req: Request, res: Response) => {
 
 export const refresh = async (req: Request, res: Response) => {
   const { refreshToken } = req.body;
+  console.log(req.body);
   try {
     const accessToken = await User.checkRefreshToken(refreshToken);
     res.status(200).send({ accessToken });
   } catch (error) {
-    console.log('error', error);
     if (
       error instanceof TokenExpiredError ||
       error.message == 'Unable to refresh accessToken'
@@ -57,7 +57,7 @@ export const refresh = async (req: Request, res: Response) => {
       return res.status(403).send();
     }
     if (error instanceof JsonWebTokenError) {
-      return res.status(401).send();
+      return res.status(401).send(error);
     }
   }
 };

@@ -1,9 +1,12 @@
-import { Schema, Model, Document, ObjectId, model } from 'mongoose';
+import { Schema, Model, Document, Types, model } from 'mongoose';
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+// TODO: set up function to generate responseJSON which is object with
+// user, accessToken, refreshToken
 
+// interface for response in json
 export interface IUserJson {
-  _id: ObjectId;
+  _id: Types._ObjectId;
   username: string;
   name: string;
 }
@@ -13,18 +16,22 @@ interface IRefreshToken {
 }
 
 export interface IUser extends IUserJson {
-  password?: string;
+  password: string;
   refreshTokens?: IRefreshToken[];
-  avatar?: Buffer;
+  avatar?: Schema.Types.Buffer;
+}
+
+interface IUserDoc extends IUser {
+  // instance methods
   generateAccessToken(): string;
   generateRefreshToken(): Promise<string>;
 }
 
-interface IUserModel extends Model<IUser> {
+interface IUserModel extends Model<IUserDoc> {
   checkLogin(
     username: string,
     password: string
-  ): Promise<IUser & Document<any, any, IUser>>;
+  ): Promise<IUserDoc & Document<any, any, IUserDoc>>;
 
   checkRefreshToken(refreshToken: string): Promise<string>;
 }
@@ -39,7 +46,7 @@ const generateToken = (
     : jwt.sign(payload, secret);
 };
 
-const userSchema = new Schema<IUser, IUserModel, IUser>(
+const userSchema = new Schema<IUserDoc, IUserModel, IUserDoc>(
   {
     username: {
       type: String,
@@ -68,7 +75,7 @@ const userSchema = new Schema<IUser, IUserModel, IUser>(
       },
     ],
     avatar: {
-      type: Buffer,
+      type: Schema.Types.Buffer,
     },
   },
   {
@@ -90,7 +97,7 @@ userSchema.pre('save', async function (next) {
 userSchema.statics.checkLogin = async (
   username: string,
   password: string
-): Promise<IUser & Document<any, any, IUser>> => {
+): Promise<IUserDoc & Document<any, any, IUserDoc>> => {
   const user = await UserModel.findOne({ username });
   if (!user) {
     throw new Error('Unable to login');
@@ -155,7 +162,7 @@ userSchema.methods.generateRefreshToken = async function (): Promise<string> {
   const refreshToken = generateToken(
     userJSON,
     process.env.REFRESH_TOKEN_SECRET!,
-    '10d'
+    process.env.REFRESH_TOKEN_EXPIRY!
   );
 
   user.refreshTokens = user.refreshTokens?.concat({ refreshToken });
@@ -170,13 +177,13 @@ userSchema.methods.generateAccessToken = function (): string {
   const accessToken = generateToken(
     userJSON,
     process.env.ACCESS_TOKEN_SECRET!,
-    '1d'
+    process.env.ACCESS_TOKEN_EXPIRY!
   );
   return accessToken;
 };
 
 // -- END schema document methods --
 
-const UserModel = model<IUser, IUserModel>('User', userSchema);
+const UserModel = model<IUserDoc, IUserModel>('User', userSchema);
 
 export default UserModel;
