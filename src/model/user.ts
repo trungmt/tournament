@@ -18,7 +18,7 @@ interface IRefreshToken {
 export interface IUser extends IUserJson {
   password: string;
   refreshTokens?: IRefreshToken[];
-  avatar?: Schema.Types.Buffer;
+  avatar?: Buffer;
 }
 
 interface IUserDoc extends IUser {
