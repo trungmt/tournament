@@ -1,11 +1,13 @@
 import { Schema, model, Model, Types } from 'mongoose';
 
-export interface ITeamDoc {
+export interface ITeam {
   _id: Types._ObjectId;
   name: string;
   permalink: string;
+  flagIcon: Buffer;
+}
+export interface ITeamDoc extends ITeam {
   nameDisplay: string;
-  flagIcon?: Schema.Types.Buffer;
 }
 interface ITeamModel extends Model<ITeamDoc> {}
 
@@ -40,6 +42,7 @@ const teamSchema = new Schema<ITeamDoc, ITeamModel, ITeamDoc>(
     },
     flagIcon: {
       type: Schema.Types.Buffer,
+      required: true,
     },
   },
   {
@@ -49,10 +52,12 @@ const teamSchema = new Schema<ITeamDoc, ITeamModel, ITeamDoc>(
 
 teamSchema.pre('validate', function (next) {
   const team = this;
-  console.log('team', team);
 
-  team.nameDisplay = team.name;
-  team.name = team.name.toLowerCase();
+  team.nameDisplay = '';
+  if (team.name) {
+    team.nameDisplay = team.name;
+    team.name = team.name.toLowerCase();
+  }
   next();
 });
 

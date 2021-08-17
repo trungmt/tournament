@@ -1,10 +1,23 @@
 import { Request, Response } from 'express';
 import Team from '../../model/team';
+import { resizeImage } from '../../middleware/upload';
 
 export const createTeam = async (req: Request, res: Response) => {
   const teamFormData = req.body;
   const team = new Team(teamFormData);
+  const flagIcon = req.file;
+
+  //TODO: function to prepare env const
+  const flagIconWidth = parseInt(process.env.DEFAULT_IMAGE_WIDTH!);
+  const flagIconHeight = parseInt(process.env.DEFAULT_IMAGE_HEIGHT!);
   try {
+    if (flagIcon) {
+      team.flagIcon = await resizeImage(
+        flagIcon.buffer,
+        flagIconWidth,
+        flagIconHeight
+      );
+    }
     await team.save();
     res.status(201).send(team);
   } catch (error) {
