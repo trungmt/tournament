@@ -1,6 +1,7 @@
+import fs from 'fs';
 import { Types } from 'mongoose';
 import User, { IUser } from '../../model/user';
-import Team, { ITeamDoc } from '../../model/team';
+import Team, { ITeam } from '../../model/team';
 
 export const userOneId = new Types.ObjectId();
 export const userOne: IUser = {
@@ -19,10 +20,19 @@ export const userTwo: IUser = {
 };
 
 export const teamOneId = new Types.ObjectId();
-export const teamOne: ITeamDoc = {
+let flagIconBuffer: Buffer;
+try {
+  flagIconBuffer = fs.readFileSync(
+    'src/tests/fixtures/images/teams/england.jpg'
+  );
+} catch (error) {
+  throw new Error('no file');
+}
+export const teamOne: ITeam = {
   _id: teamOneId,
   name: 'England',
   permalink: 'england',
+  flagIcon: flagIconBuffer,
 };
 
 export const setupDatabase = async () => {
