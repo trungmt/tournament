@@ -11,10 +11,11 @@ beforeEach(async () => {
 test('Should sign up user', async () => {
   const response = await request(app)
     .post('/auth/register')
-    .send({
+    .field({
       name: 'Tran Minh Trung',
       username: 'trungtm2',
       password: 'abcd1234!',
     })
+    .attach('avatar', 'src/tests/fixtures/images/users/user.jpg')
     .expect(201);
 });
