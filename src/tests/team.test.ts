@@ -181,5 +181,57 @@ describe('POST /api/admin/teams', () => {
         'Team validation failed: flagIcon: Path `flagIcon` is required.'
       );
     });
+
+    test('case of empty file attached', async () => {
+      const response = await request(app)
+        .post(createTeamURL)
+        .set('Authorization', `Bearer ${userOneToken}`)
+        .set('Connection', 'keep-alive')
+        .field({
+          name: 'Italy',
+          permalink: 'italy',
+        })
+        .attach('flagIcon', 'src/tests/fixtures/images/teams/england_empty.jpg')
+        .expect(400);
+
+      expect(response.body.name).toBe('ValidationError');
+      expect(response.body.message).toBe(
+        'Team validation failed: flagIcon: Path `flagIcon` is required.'
+      );
+    });
+
+    test('upload flagIcon with exceed filesize', async () => {
+      const response = await request(app)
+        .post(createTeamURL)
+        .set('Authorization', `Bearer ${userOneToken}`)
+        .set('Connection', 'keep-alive')
+        .field({
+          name: 'Italy',
+          permalink: 'italy',
+        })
+        .attach('flagIcon', 'src/tests/fixtures/images/teams/england_large.jpg')
+        .expect(400);
+
+      expect(response.body.name).toBe('MulterError');
+      expect(response.body.field).toBe('flagIcon');
+      expect(response.body.code).toBe('LIMIT_FILE_SIZE');
+    });
+
+    test('upload flagIcon with exceed filesize', async () => {
+      const response = await request(app)
+        .post(createTeamURL)
+        .set('Authorization', `Bearer ${userOneToken}`)
+        .set('Connection', 'keep-alive')
+        .field({
+          name: 'Italy',
+          permalink: 'italy',
+        })
+        .attach('flagIcon', 'src/tests/fixtures/images/teams/england.txt')
+        .expect(400);
+
+      expect(response.body.message).toBe(
+        'File type not allowed. Please upload image with these types: jpg, jpeg, png, gif, tiff'
+      );
+    });
   });
 });
