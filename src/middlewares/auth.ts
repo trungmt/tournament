@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import User, { IUserJson } from '../model/user';
+import User, { IUserJson } from '../models/user';
 
 const auth = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -13,7 +13,7 @@ const auth = async (req: Request, res: Response, next: NextFunction) => {
       process.env.ACCESS_TOKEN_SECRET!
     ) as IUserJson;
     const user = await User.findOne({
-      _id: userJSON._id,
+      username: userJSON.username,
     });
 
     if (!user) {

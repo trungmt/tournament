@@ -1,8 +1,12 @@
 import { Request, Response } from 'express';
-import Team from '../../model/team';
-import { resizeImage } from '../../middleware/upload';
+import Team from '../../models/team';
+import { resizeImage } from '../../middlewares/upload';
+import { ITeam } from '../../models/team';
 
-export const createTeam = async (req: Request, res: Response) => {
+export const createTeam = async (
+  req: Request<{}, {}, ITeam>,
+  res: Response
+) => {
   const teamFormData = req.body;
   const team = new Team(teamFormData);
   const flagIcon = req.file;
@@ -11,7 +15,7 @@ export const createTeam = async (req: Request, res: Response) => {
   const flagIconWidth = parseInt(process.env.DEFAULT_IMAGE_WIDTH!);
   const flagIconHeight = parseInt(process.env.DEFAULT_IMAGE_HEIGHT!);
   try {
-    if (flagIcon) {
+    if (flagIcon && flagIcon.buffer && flagIcon.buffer.length) {
       team.flagIcon = await resizeImage(
         flagIcon.buffer,
         flagIconWidth,
@@ -21,6 +25,8 @@ export const createTeam = async (req: Request, res: Response) => {
     await team.save();
     res.status(201).send(team);
   } catch (error) {
+    console.log('error', error);
+
     res.status(400).send(error);
   }
 };

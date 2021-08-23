@@ -1,6 +1,6 @@
 import express from 'express';
-import * as authController from '../../controller/auth/auth';
-import { upload } from '../../middleware/upload';
+import * as authController from '../../controllers/auth/auth';
+import { upload } from '../../middlewares/upload';
 const router = express.Router();
 
 router.post(

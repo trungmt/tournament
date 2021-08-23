@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { userOne, userOneId, setupDatabase } from './fixtures/db';
+import { userOne, setupDatabase } from './fixtures/db';
 import app from '../app';
 
 let userOneToken: string;

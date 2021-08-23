@@ -1,6 +1,6 @@
 import express from 'express';
-import authRouter from './router/auth/auth';
-import adminRouter from './router/admin/admin';
+import authRouter from './routers/auth/auth';
+import adminRouter from './routers/admin/admin';
 require('./db/mongoose');
 
 const app = express();

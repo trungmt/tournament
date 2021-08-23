@@ -1,7 +1,6 @@
 import { Schema, model, Model, Types } from 'mongoose';
 
 export interface ITeam {
-  _id: Types._ObjectId;
   name: string;
   permalink: string;
   flagIcon: Buffer;

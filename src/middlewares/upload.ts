@@ -1,5 +1,5 @@
 import path from 'path';
-import multer from 'multer';
+import multer, { MulterError } from 'multer';
 import sharp from 'sharp';
 
 export const upload = multer({
@@ -10,6 +10,8 @@ export const upload = multer({
   fileFilter(req, file, cb) {
     const fileExtPattern = /^.(jpg|jpeg|png|gif|tiff)$/;
     const fileExt = path.extname(file.originalname).toLowerCase();
+    // console.log('file.mimetype', file.mimetype);
+
     if (!fileExtPattern.test(fileExt)) {
       cb(
         new Error(
@@ -27,9 +29,7 @@ export const resizeImage = async (
   width: number,
   height: number
 ): Promise<Buffer> => {
-  const resizeBuffer = await sharp(file)
-    .resize({ width, height })
-    .png()
-    .toBuffer();
-  return resizeBuffer;
+  if (file.length === 0) return Buffer.alloc(0);
+
+  return await sharp(file).resize({ width, height }).png().toBuffer();
 };

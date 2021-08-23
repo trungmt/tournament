@@ -1,9 +1,9 @@
 /// <reference types="express" />
 import { Document, Query } from 'mongoose';
-import { IUser } from '../model/user';
+import { IUser } from '../models/user';
 
 /** This type definition auguments for auth middleware
- * which stays at src/middleware/auth.ts
+ * which stays at src/middlewares/auth.ts
  *
  * More detail, it called Declaration Merging
  * @link https://www.typescriptlang.org/docs/handbook/declaration-merging.html
@@ -13,7 +13,7 @@ import { IUser } from '../model/user';
 
 /**
  * when using import above if I use Express instead of 'express' i will get
- * errors in middleware/auth.ts
+ * errors in middlewares/auth.ts
  * */
 declare module 'express' {
   interface Request {

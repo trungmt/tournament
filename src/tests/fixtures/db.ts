@@ -1,25 +1,20 @@
 import fs from 'fs';
 import { Types } from 'mongoose';
-import User, { IUser } from '../../model/user';
-import Team, { ITeam } from '../../model/team';
+import User, { IUser } from '../../models/user';
+import Team, { ITeam } from '../../models/team';
 
-export const userOneId = new Types.ObjectId();
 export const userOne: IUser = {
-  _id: userOneId,
   username: 'trungtm',
   name: 'Trung Tran',
   password: 'abcd1234',
 };
 
-export const userTwoId = new Types.ObjectId();
 export const userTwo: IUser = {
-  _id: userTwoId,
   username: 'trungtm1',
   name: ' Tran Minh Trung ',
   password: 'abcd1234!',
 };
 
-export const teamOneId = new Types.ObjectId();
 let flagIconBuffer: Buffer;
 try {
   flagIconBuffer = fs.readFileSync(
@@ -29,7 +24,6 @@ try {
   throw new Error('no file');
 }
 export const teamOne: ITeam = {
-  _id: teamOneId,
   name: 'England',
   permalink: 'england',
   flagIcon: flagIconBuffer,

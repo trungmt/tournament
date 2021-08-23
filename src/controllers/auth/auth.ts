@@ -1,7 +1,7 @@
 import { Request, response, Response } from 'express';
 import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
-import User from '../../model/user';
-import { resizeImage } from '../../middleware/upload';
+import User from '../../models/user';
+import { resizeImage } from '../../middlewares/upload';
 
 export const login = async (req: Request, res: Response) => {
   const { username, password } = req.body;

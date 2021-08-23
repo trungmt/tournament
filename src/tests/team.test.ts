@@ -1,8 +1,7 @@
 import request from 'supertest';
 import app from '../app';
-import { setupDatabase, userOne, userOneId } from './fixtures/db';
-import Team from '../model/team';
-import { createTeam } from '../controller/admin/teams';
+import { setupDatabase, userOne } from './fixtures/db';
+import Team from '../models/team';
 
 const createTeamURL = '/api/admin/teams';
 

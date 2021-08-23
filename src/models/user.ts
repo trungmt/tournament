@@ -6,7 +6,6 @@ import jwt from 'jsonwebtoken';
 
 // interface for response in json
 export interface IUserJson {
-  _id: Types._ObjectId;
   username: string;
   name: string;
 }
@@ -119,12 +118,12 @@ userSchema.statics.checkRefreshToken = async (
     process.env.REFRESH_TOKEN_SECRET!
   ) as IUserJson;
 
-  if (!userJSON._id) {
+  if (!userJSON.username) {
     throw new Error('Unable to refresh accessToken');
   }
 
   const user = await UserModel.findOne({
-    _id: userJSON._id,
+    username: userJSON.username,
     'refreshTokens.refreshToken': refreshToken,
   });
 
@@ -143,7 +142,6 @@ userSchema.methods.toJSON = function (): IUserJson {
   const userObject = this.toObject();
 
   return {
-    _id: userObject._id,
     username: userObject.username,
     name: userObject.name,
   };
