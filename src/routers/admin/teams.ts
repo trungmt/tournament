@@ -3,11 +3,11 @@ import { MulterError } from 'multer';
 import * as adminTeamController from '../../controllers/admin/teams';
 import auth from '../../middlewares/auth';
 import { uploadSingleFile } from '../../middlewares/upload';
-import { validation } from '../../middlewares/teamValidation';
+import { validation } from '../../middlewares/validation';
 import {
   teamFieldValidationSchema,
   teamFileValidationSchema,
-} from '../../validations/teamValidation';
+} from '../../validations/teamValidationSchema';
 
 const teamsRouter = express.Router();
 

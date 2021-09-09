@@ -1,6 +1,6 @@
 import Joi from 'joi';
 import { RequestHandler, Request, Response, NextFunction } from 'express';
-import { options } from '../validations/teamValidation';
+import { options } from '../validations/teamValidationSchema';
 import { ValidationError } from '../exceptions/ValidationError';
 
 export const validation =
