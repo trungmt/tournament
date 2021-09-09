@@ -1,28 +1,38 @@
-import express from 'express';
+import express, { ErrorRequestHandler, response } from 'express';
 import { MulterError } from 'multer';
 import * as adminTeamController from '../../controllers/admin/teams';
 import auth from '../../middlewares/auth';
-import { upload } from '../../middlewares/upload';
+import { uploadSingleFile } from '../../middlewares/upload';
+import { validation } from '../../middlewares/teamValidation';
+import {
+  teamFieldValidationSchema,
+  teamFileValidationSchema,
+} from '../../validations/teamValidation';
 
 const teamsRouter = express.Router();
+
+// teamsRouter.post(
+//   '/uploadFlagIcon',
+//   auth,
+//   // adminTeamController.uploadFlagIcon
+// );
+
+teamsRouter.post(
+  '/uploadFlagIcon',
+  auth,
+  uploadSingleFile('flagIcon'),
+  validation(teamFileValidationSchema),
+  (req, res) => {
+    res.status(200).send({ aaa: 1121 });
+  }
+);
 
 teamsRouter.post(
   '/',
   auth,
-  upload.single('flagIcon'),
-  adminTeamController.createTeam,
-  (
-    error: any,
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction
-  ) => {
-    // TODO: make response for form validation errors
-    if (error instanceof MulterError) {
-      return res.status(400).send(error);
-    }
-    res.status(400).send({ message: error.message });
-  }
+  uploadSingleFile('flagIcon'),
+  validation(teamFieldValidationSchema),
+  adminTeamController.createTeam
 );
 
 export default teamsRouter;

@@ -1,11 +1,13 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import Team from '../../models/team';
 import { resizeImage } from '../../middlewares/upload';
 import { ITeam } from '../../models/team';
+import Api500Error from '../../exceptions/Api500Error';
 
 export const createTeam = async (
   req: Request<{}, {}, ITeam>,
-  res: Response
+  res: Response,
+  next: NextFunction
 ) => {
   const teamFormData = req.body;
   const team = new Team(teamFormData);
@@ -25,12 +27,12 @@ export const createTeam = async (
     await team.save();
     res.status(201).send(team);
   } catch (error) {
-    console.log('error', error);
-
-    res.status(400).send(error);
+    next(error);
   }
 };
 export const updateTeam = (req: Request, res: Response) => {};
 export const deleteTeam = (req: Request, res: Response) => {};
 export const getTeamList = (req: Request, res: Response) => {};
 export const getTeamDetail = (req: Request, res: Response) => {};
+
+export const uploadFlagIcon = (req: Request, res: Response) => {};
