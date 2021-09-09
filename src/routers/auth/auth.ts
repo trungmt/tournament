@@ -1,11 +1,11 @@
 import express from 'express';
 import * as authController from '../../controllers/auth/auth';
-import { upload } from '../../middlewares/upload';
+import { uploadSingleFile } from '../../middlewares/upload';
 const router = express.Router();
 
 router.post(
   '/register',
-  upload.single('avatar'),
+  uploadSingleFile('avatar'),
   authController.register,
   (
     error: any,
