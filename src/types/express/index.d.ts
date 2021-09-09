@@ -15,9 +15,26 @@ import { IUser } from '../models/user';
  * when using import above if I use Express instead of 'express' i will get
  * errors in middlewares/auth.ts
  * */
+
 declare module 'express' {
   interface Request {
     token?: string;
     user?: IUser & Document<any, any, IUser>;
+    errors?: {
+      [k: string]: string;
+    };
+  }
+  interface RequestHandler<
+    P = core.ParamsDictionary,
+    ResBody = any,
+    ReqBody = any,
+    ReqQuery = core.Query,
+    Locals extends Record<string, any> = Record<string, any>
+  > extends core.RequestHandler<P, ResBody, ReqBody, ReqQuery, Locals> {
+    (
+      req: Request<P, ResBody, ReqBody, ReqQuery, Locals>,
+      res: Response<ResBody, Locals>,
+      next: NextFunction
+    ): void;
   }
 }
