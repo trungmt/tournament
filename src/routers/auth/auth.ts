@@ -1,11 +1,13 @@
 import express from 'express';
 import * as authController from '../../controllers/auth/auth';
 import { uploadSingleFile } from '../../middlewares/upload';
-const router = express.Router();
 
-router.post(
+const authRouter = express.Router();
+const entityName = 'users';
+
+authRouter.post(
   '/register',
-  uploadSingleFile('avatar'),
+  uploadSingleFile('avatar', entityName),
   authController.register,
   (
     error: any,
@@ -17,8 +19,8 @@ router.post(
   }
 );
 
-router.post('/login', authController.login);
+authRouter.post('/login', authController.login);
 
-router.post('/refresh', authController.refresh);
+authRouter.post('/refresh', authController.refresh);
 
-export default router;
+export default authRouter;

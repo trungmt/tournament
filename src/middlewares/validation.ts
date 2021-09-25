@@ -8,9 +8,8 @@ export const validation =
   (req: Request, res: Response, next: NextFunction) => {
     if (!req.errors) req.errors = {};
 
-    const { error, value } = schema.validate(req, options);
+    const { error, value } = schema.validate(req.body, options);
     if (!error) {
-      console.log('Validation value', value);
       next();
       return;
     }

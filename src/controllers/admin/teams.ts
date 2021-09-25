@@ -3,6 +3,7 @@ import Team from '../../models/team';
 import { resizeImage } from '../../middlewares/upload';
 import { ITeam } from '../../models/team';
 import Api500Error from '../../exceptions/Api500Error';
+import { CustomResponse } from '../../services/CustomResponse';
 
 export const createTeam = async (
   req: Request<{}, {}, ITeam>,
@@ -35,4 +36,13 @@ export const deleteTeam = (req: Request, res: Response) => {};
 export const getTeamList = (req: Request, res: Response) => {};
 export const getTeamDetail = (req: Request, res: Response) => {};
 
-export const uploadFlagIcon = (req: Request, res: Response) => {};
+export const uploadFlagIcon = (req: Request, res: Response) => {
+  const filename = req.file?.filename;
+
+  if (filename) {
+    const response = new CustomResponse('Upload file successfully', {
+      filename,
+    });
+    return res.status(201).send(response);
+  }
+};

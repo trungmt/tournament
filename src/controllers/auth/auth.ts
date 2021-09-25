@@ -60,8 +60,9 @@ export const refresh = async (req: Request, res: Response) => {
     res.status(200).send({ accessToken });
   } catch (error) {
     if (
-      error instanceof TokenExpiredError ||
-      error.message == 'Unable to refresh accessToken'
+      error instanceof Error &&
+      (error instanceof TokenExpiredError ||
+        error.message == 'Unable to refresh accessToken')
     ) {
       return res.status(403).send();
     }

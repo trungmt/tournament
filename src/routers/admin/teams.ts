@@ -1,5 +1,4 @@
 import express, { ErrorRequestHandler, response } from 'express';
-import { MulterError } from 'multer';
 import * as adminTeamController from '../../controllers/admin/teams';
 import auth from '../../middlewares/auth';
 import { uploadSingleFile } from '../../middlewares/upload';
@@ -10,27 +9,20 @@ import {
 } from '../../validations/teamValidationSchema';
 
 const teamsRouter = express.Router();
-
-// teamsRouter.post(
-//   '/uploadFlagIcon',
-//   auth,
-//   // adminTeamController.uploadFlagIcon
-// );
+const entityName = 'teams';
 
 teamsRouter.post(
-  '/uploadFlagIcon',
+  '/upload/flagIcon',
   auth,
-  uploadSingleFile('flagIcon'),
+  uploadSingleFile('flagIcon', entityName),
   validation(teamFileValidationSchema),
-  (req, res) => {
-    res.status(200).send({ aaa: 1121 });
-  }
+  adminTeamController.uploadFlagIcon
 );
 
 teamsRouter.post(
   '/',
   auth,
-  uploadSingleFile('flagIcon'),
+  uploadSingleFile('flagIcon', entityName),
   validation(teamFieldValidationSchema),
   adminTeamController.createTeam
 );
