@@ -126,3 +126,71 @@ export const resizeImage = async (
   }
   return result;
 };
+
+const getFileTypeFromDisk = async (
+  filePath: string
+): Promise<FileTypeResult | undefined> => {
+  // TODO: how to handle error when async running?
+  return await FileType.fromFile(filePath);
+};
+
+const verifyFileExtension = (
+  fileExtension: string,
+  acceptedExtension: RegExp | string[] | string
+): boolean => {
+  if (Array.isArray(acceptedExtension)) {
+    acceptedExtension = `/^${acceptedExtension.join('|')}$/`;
+  }
+
+  const acceptedExtensionRegex = new RegExp(acceptedExtension);
+  return acceptedExtensionRegex.test(fileExtension);
+};
+
+export const removeOldTempFiles = async (
+  removeTimeMs: number,
+  dirname: string = process.env.TEMP_FILE_DIR!
+) => {
+  console.log('dirname', dirname);
+  try {
+    const currentTimestamp = new Date().getTime();
+
+    // list files and directories in `dirname`
+    const files = await readdir(dirname, { withFileTypes: true });
+
+    // loop through files and directory in `dirname`
+    files.forEach(async dirent => {
+      const filePath = path.join(dirname, dirent.name);
+
+      // wont touch special files
+      if (dirent.name === '.gitkeep') {
+        return;
+      }
+
+      // if `filePath` is directory, do removeOldTempFiles(timeDistance, `filePath`)
+      if (dirent.isDirectory()) {
+        removeOldTempFiles(removeTimeMs, filePath);
+        return;
+      }
+
+      // if `filepath` is file get status of file for file's modification time
+      const fileStat = await stat(filePath);
+
+      console.log('mtimeMS', fileStat.mtimeMs);
+      console.log(
+        'currentTimestamp - removeTimeMs',
+        currentTimestamp - removeTimeMs
+      );
+
+      // if file modification date is older than removeTimeMs --> delete that file
+      if (fileStat.mtimeMs < currentTimestamp - removeTimeMs) {
+        console.log(filePath, 'deleted');
+        unlink(filePath);
+        return;
+      }
+      console.log(filePath, 'NOT deleted');
+      return;
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
