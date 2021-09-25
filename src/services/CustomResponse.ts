@@ -15,7 +15,14 @@ export class CustomResponse {
   name?: string;
   stack?: string;
 
-  constructor(message?: string, data?: any, name?: string, stack?: string) {
+  constructor(
+    message?: string,
+    data?: {
+      [dataName: string]: any;
+    },
+    name?: string,
+    stack?: string
+  ) {
     this.message = message;
     this.data = data;
     this.name = name;
@@ -27,14 +34,17 @@ export class CustomResponse {
       message: this.message,
     };
 
-    if (this.data !== undefined) {
+    if (typeof this.data !== 'undefined') {
       jsonObject.data = this.data;
     }
-    if (this.name !== undefined) {
+    if (typeof this.name !== 'undefined') {
       jsonObject.name = this.name;
     }
 
-    if (process.env.NODE_ENV === 'development' && this.stack !== undefined) {
+    if (
+      process.env.NODE_ENV === 'development' &&
+      typeof this.stack !== 'undefined'
+    ) {
       jsonObject.stack = this.stack;
     }
 

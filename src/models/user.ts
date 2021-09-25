@@ -40,7 +40,7 @@ const generateToken = (
   secret: string,
   expiresIn?: string
 ): string => {
-  return expiresIn !== undefined
+  return typeof expiresIn !== 'undefined'
     ? jwt.sign(payload, secret, { expiresIn })
     : jwt.sign(payload, secret);
 };

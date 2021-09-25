@@ -1,5 +1,4 @@
 import fs from 'fs';
-import { Types } from 'mongoose';
 import User, { IUser } from '../../models/user';
 import Team, { ITeam } from '../../models/team';
 

@@ -19,5 +19,10 @@ export const responseException = (
   next: NextFunction
 ) => {
   // TODO: check if error is BaseError, if not create new BaseError object
-  res.status(error.statusCode).send(error);
+  console.log('error', error);
+  let statusCode = 500;
+  if (error.statusCode) {
+    statusCode = error.statusCode;
+  }
+  res.status(statusCode).send(error);
 };
