@@ -3,7 +3,7 @@ import { Schema, model, Model, Types } from 'mongoose';
 export interface ITeam {
   name: string;
   permalink: string;
-  flagIcon: Buffer;
+  flagIcon: string;
 }
 export interface ITeamDoc extends ITeam {
   nameDisplay: string;
@@ -40,7 +40,7 @@ const teamSchema = new Schema<ITeamDoc, ITeamModel, ITeamDoc>(
       ],
     },
     flagIcon: {
-      type: Schema.Types.Buffer,
+      type: String,
       required: true,
     },
   },

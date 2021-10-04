@@ -2,14 +2,14 @@ import express, { ErrorRequestHandler, response } from 'express';
 import * as adminTeamController from '../../controllers/admin/teams';
 import auth from '../../middlewares/auth';
 import { uploadSingleFile } from '../../middlewares/upload';
-import { validation } from '../../middlewares/validation';
+import { validation, validationAsync } from '../../middlewares/validation';
 import {
   teamFieldValidationSchema,
   teamFileValidationSchema,
 } from '../../validations/teamValidationSchema';
 
 const teamsRouter = express.Router();
-const entityName = 'teams';
+const entityName = process.env.ENTITY_TEAMS!;
 
 teamsRouter.post(
   '/upload/flagIcon',
@@ -22,8 +22,10 @@ teamsRouter.post(
 teamsRouter.post(
   '/',
   auth,
-  uploadSingleFile('flagIcon', entityName),
-  validation(teamFieldValidationSchema),
+  validationAsync(teamFieldValidationSchema),
+  adminTeamController.createTeam
+);
+
   adminTeamController.createTeam
 );
 

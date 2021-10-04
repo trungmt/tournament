@@ -12,19 +12,24 @@ export const createTeam = async (
 ) => {
   const teamFormData = req.body;
   const team = new Team(teamFormData);
-  const flagIcon = req.file;
 
   //TODO: function to prepare env const
+  //TODO: check if there are redudant inputs
   const flagIconWidth = parseInt(process.env.DEFAULT_IMAGE_WIDTH!);
-  const flagIconHeight = parseInt(process.env.DEFAULT_IMAGE_HEIGHT!);
   try {
-    if (flagIcon && flagIcon.buffer && flagIcon.buffer.length) {
-      team.flagIcon = await resizeImage(
-        flagIcon.buffer,
-        flagIconWidth,
-        flagIconHeight
-      );
-    }
+    await moveUploadFile(
+      process.env.ENTITY_TEAMS!,
+      req.body.flagIcon,
+      flagIconWidth
+    );
+
+    await team.save();
+
+    res.status(201).send(team);
+  } catch (error) {
+    next(error);
+  }
+};
     await team.save();
     res.status(201).send(team);
   } catch (error) {
