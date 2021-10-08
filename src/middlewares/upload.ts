@@ -114,7 +114,7 @@ export const uploadSingleFile = (
  * @param inputFilePath string containing file path of image
  * @param width number specify width of image to resize
  * @param outputFilePath string|undefined containing output image file path
- * @returns void if outputFilePath is specified, store resized image to outputFilePath
+ * @returns void if outputFilePath is specified, store resized image to outputFilePath,
  *          or Buffer of resized image if outputFilePath is not specified
  */
 export const resizeImage = async (
@@ -123,21 +123,27 @@ export const resizeImage = async (
   outputFilePath?: string
 ): Promise<void | Buffer> => {
   try {
-    const resizedFile = await sharp(inputFilePath).resize({
+    const resizedFile = sharp(inputFilePath).resize({
       fit: sharp.fit.contain,
       width,
     });
 
     if (typeof outputFilePath === 'undefined') {
-      return resizedFile.png().toBuffer();
+      return await resizedFile.png().toBuffer();
     }
 
-    resizedFile.toFile(outputFilePath);
+    await resizedFile.toFile(outputFilePath);
     return;
   } catch (error) {
     if (error instanceof Error) {
       throw new BaseError(error.message, error.name, 422, true);
     }
+    throw new BaseError(
+      'Error occurs when resize image',
+      'Error occurs when resize image',
+      500,
+      true
+    );
   }
 };
 
@@ -191,12 +197,6 @@ export const removeOldTempFiles = async (
       // if `filepath` is file get status of file for file's modification time
       const fileStat = await stat(filePath);
 
-      // console.log('mtimeMS', fileStat.mtimeMs);
-      // console.log(
-      //   'currentTimestamp - removeTimeMs',
-      //   currentTimestamp - removeTimeMs
-      // );
-
       // if file modification date is older than removeTimeMs --> delete that file
       if (fileStat.mtimeMs < currentTimestamp - removeTimeMs) {
         console.log(filePath, 'deleted');
@@ -207,7 +207,7 @@ export const removeOldTempFiles = async (
       console.log(filePath, 'NOT deleted');
     });
   } catch (error) {
-    console.log(error);
+    console.log('Error removeOldTempFiles', error);
   }
   return result;
 };
