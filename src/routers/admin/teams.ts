@@ -1,8 +1,8 @@
-import express, { ErrorRequestHandler, response } from 'express';
-import * as adminTeamController from '../../controllers/admin/teams';
+import express from 'express';
+import TeamController from '../../controllers/admin/teams';
 import auth from '../../middlewares/auth';
 import { uploadSingleFile } from '../../middlewares/upload';
-import { validation, validationAsync } from '../../middlewares/validation';
+import { validationAsync } from '../../middlewares/validation';
 import {
   teamFieldValidationSchema,
   teamFileValidationSchema,
@@ -11,22 +11,28 @@ import {
 const teamsRouter = express.Router();
 const entityName = process.env.ENTITY_TEAMS!;
 
+const Team = new TeamController(entityName);
+
 teamsRouter.post(
   '/upload/flagIcon',
   auth,
   uploadSingleFile('flagIcon', entityName),
-  validation(teamFileValidationSchema),
-  adminTeamController.uploadFlagIcon
+  validationAsync(teamFileValidationSchema),
+  Team.uploadFlagIcon
 );
 
 teamsRouter.post(
   '/',
   auth,
   validationAsync(teamFieldValidationSchema),
-  adminTeamController.createTeam
+  Team.create
 );
 
-  adminTeamController.createTeam
+teamsRouter.patch(
+  '/:id',
+  auth,
+  validationAsync(teamFieldValidationSchema),
+  Team.update
 );
 
 export default teamsRouter;

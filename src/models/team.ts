@@ -49,17 +49,6 @@ const teamSchema = new Schema<ITeamDoc, ITeamModel, ITeamDoc>(
   }
 );
 
-teamSchema.pre('validate', function (next) {
-  const team = this;
-
-  team.nameDisplay = '';
-  if (team.name) {
-    team.nameDisplay = team.name;
-    team.name = team.name.toLowerCase();
-  }
-  next();
-});
-
 const TeamModel = model<ITeamDoc, ITeamModel>('Team', teamSchema);
 
 export default TeamModel;
