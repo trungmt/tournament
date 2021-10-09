@@ -1,16 +1,10 @@
 import path from 'path';
 import { access } from 'fs/promises';
-import Team, { ITeamDoc } from '../models/team';
+import Team from '../models/team';
 import BaseError from '../exceptions/BaseError';
 import { Document, FilterQuery } from 'mongoose';
 import { object, string, mixed, TestFunction, SchemaOf } from 'yup';
-export interface ITeamFieldForm {
-  name: string;
-  permalink: string;
-  flagIcon: string;
-}
-
-export interface ITeamFileForm {
+interface ITeamFileForm {
   flagIcon?: Express.Multer.File;
 }
 
@@ -124,7 +118,7 @@ const duplicateNameValidation: TestFunction<
 };
 
 // NOTE:(message function - https://github.com/sideway/joi/blob/83092836583a7f4ce16cbf116b8776737e80d16f/test/base.js#L1920)
-export const teamFieldValidationSchema: SchemaOf<ITeamFieldForm> = object({
+export const teamFieldValidationSchema: SchemaOf<ITeam> = object({
   name: string()
     .required()
     .label('Name')
@@ -151,8 +145,7 @@ export const teamFieldValidationSchema: SchemaOf<ITeamFieldForm> = object({
       'Invalid ${label} file path',
       flagIconFilePathValidation
     ),
-  //TODO: add more async validation rule, check if all of them response at once
-}).defined();
+});
 
 export const teamFileValidationSchema: SchemaOf<ITeamFileForm> = object({
   // it's a workaround https://github.com/jquense/yup/pull/1358/files

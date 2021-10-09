@@ -1,13 +1,5 @@
 import { Schema, model, Model, Types } from 'mongoose';
 
-export interface ITeam {
-  name: string;
-  permalink: string;
-  flagIcon: string;
-}
-export interface ITeamDoc extends ITeam {
-  nameDisplay: string;
-}
 interface ITeamModel extends Model<ITeamDoc> {}
 
 const validatePermalinkPattern = function (permalink: string) {
