@@ -1,4 +1,4 @@
-import { Schema, model, Model, Types } from 'mongoose';
+import { Schema, model, Model } from 'mongoose';
 
 interface ITeamModel extends Model<ITeamDoc> {}
 

@@ -1,12 +1,9 @@
-import { NextFunction, Request, RequestHandler, Response } from 'express';
-import { ParamsDictionary } from 'express-serve-static-core';
-import Team, { ITeamDoc } from '../../models/team';
+import { NextFunction, Request, Response } from 'express';
+import Team from '../../models/team';
 import { moveUploadFile } from '../../middlewares/upload';
-import { ITeam } from '../../models/team';
 import { CustomResponse } from '../../services/CustomResponse';
 import BaseError from '../../exceptions/BaseError';
 import AdminAbstractController from '../AdminAbstractController';
-import { ParsedQs } from 'qs';
 import { ModifyFormParams } from '../AdminEntityControllerInterface';
 export default class TeamController extends AdminAbstractController {
   constructor(entityName: string) {
