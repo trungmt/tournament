@@ -1,11 +1,11 @@
 import path from 'path';
-import { readdir, stat, unlink } from 'fs/promises';
+import { readdir, stat, unlink, mkdir, rename } from 'fs/promises';
 import { RequestHandler, Request, Response, NextFunction } from 'express';
-import multer, { MulterError } from 'multer';
-import sharp from 'sharp';
 import { ObjectID } from 'mongodb';
-import BaseError from '../exceptions/BaseError';
 import FileType, { FileTypeResult } from 'file-type';
+import multer, { MulterError, Multer } from 'multer';
+import sharp from 'sharp';
+import BaseError from '../exceptions/BaseError';
 
 /**
  * Function to generate Multer instance that consists configs
@@ -15,7 +15,7 @@ import FileType, { FileTypeResult } from 'file-type';
  */
 const generateDiskUploadConfig = (
   tempDestination: string | undefined = undefined
-) =>
+): Multer =>
   multer({
     storage: multer.diskStorage({
       destination: tempDestination,
@@ -56,7 +56,7 @@ export const uploadSingleFile = (
   fieldName: string,
   entityName: string | undefined = undefined
 ): RequestHandler => {
-  let destination = process.env.TEMP_FILE_DIR;
+  let destination = process.env.UPLOAD_TEMP_FILE_DIR;
   if (typeof destination !== 'undefined' && typeof entityName !== 'undefined') {
     destination += `${entityName}`;
   }
@@ -109,22 +109,42 @@ export const uploadSingleFile = (
   return uploadSingleFileErrorHandler;
 };
 
+/**
+ * Resize image from file stored on disk
+ * @param inputFilePath string containing file path of image
+ * @param width number specify width of image to resize
+ * @param outputFilePath string|undefined containing output image file path
+ * @returns void if outputFilePath is specified, store resized image to outputFilePath,
+ *          or Buffer of resized image if outputFilePath is not specified
+ */
 export const resizeImage = async (
-  file: Buffer,
+  inputFilePath: string,
   width: number,
-  height: number
-): Promise<Buffer> => {
-  let result = Buffer.alloc(0);
-  if (file.length === 0) return result;
-
+  outputFilePath?: string
+): Promise<void | Buffer> => {
   try {
-    result = await sharp(file).resize({ width, height }).png().toBuffer();
+    const resizedFile = sharp(inputFilePath).resize({
+      fit: sharp.fit.contain,
+      width,
+    });
+
+    if (typeof outputFilePath === 'undefined') {
+      return await resizedFile.png().toBuffer();
+    }
+
+    await resizedFile.toFile(outputFilePath);
+    return;
   } catch (error) {
     if (error instanceof Error) {
       throw new BaseError(error.message, error.name, 422, true);
     }
+    throw new BaseError(
+      'Error occurs when resize image',
+      'Error occurs when resize image',
+      500,
+      true
+    );
   }
-  return result;
 };
 
 const getFileTypeFromDisk = async (
@@ -148,9 +168,10 @@ const verifyFileExtension = (
 
 export const removeOldTempFiles = async (
   removeTimeMs: number,
-  dirname: string = process.env.TEMP_FILE_DIR!
-) => {
+  dirname: string = process.env.UPLOAD_TEMP_FILE_DIR!
+): Promise<boolean> => {
   console.log('dirname', dirname);
+  let result = false;
   try {
     const currentTimestamp = new Date().getTime();
 
@@ -159,6 +180,7 @@ export const removeOldTempFiles = async (
 
     // loop through files and directory in `dirname`
     files.forEach(async dirent => {
+      result = true;
       const filePath = path.join(dirname, dirent.name);
 
       // wont touch special files
@@ -168,29 +190,51 @@ export const removeOldTempFiles = async (
 
       // if `filePath` is directory, do removeOldTempFiles(timeDistance, `filePath`)
       if (dirent.isDirectory()) {
-        removeOldTempFiles(removeTimeMs, filePath);
+        const subResult = await removeOldTempFiles(removeTimeMs, filePath);
         return;
       }
 
       // if `filepath` is file get status of file for file's modification time
       const fileStat = await stat(filePath);
 
-      console.log('mtimeMS', fileStat.mtimeMs);
-      console.log(
-        'currentTimestamp - removeTimeMs',
-        currentTimestamp - removeTimeMs
-      );
-
       // if file modification date is older than removeTimeMs --> delete that file
       if (fileStat.mtimeMs < currentTimestamp - removeTimeMs) {
         console.log(filePath, 'deleted');
         unlink(filePath);
-        return;
+        result = true;
+        return result;
       }
       console.log(filePath, 'NOT deleted');
-      return;
     });
   } catch (error) {
-    console.log(error);
+    console.log('Error removeOldTempFiles', error);
+  }
+  return result;
+};
+
+export const moveUploadFile = async (
+  entityName: string, //TODO: make entityNames type, enum, const
+  fileName: string,
+  resizeWidth?: number
+): Promise<void> => {
+  const tempFilePath = path.join(
+    process.env.UPLOAD_TEMP_FILE_DIR!,
+    entityName,
+    fileName
+  );
+  const targetDirectory = path.join(process.env.UPLOAD_FILE_DIR!, entityName);
+  const targetFilePath = path.join(targetDirectory, fileName);
+
+  try {
+    await mkdir(targetDirectory, { recursive: true });
+    if (resizeWidth) {
+      await resizeImage(tempFilePath, resizeWidth, targetFilePath);
+      await unlink(tempFilePath);
+    } else {
+      await rename(tempFilePath, targetFilePath);
+    }
+  } catch (error) {
+    console.log('Error moveUploadFile', error);
+    throw new BaseError(`Error occurs when uploading image`, '', 500, false);
   }
 };

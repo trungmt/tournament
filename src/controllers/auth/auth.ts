@@ -32,7 +32,7 @@ export const register = async (req: Request, res: Response) => {
 
   try {
     if (avatar) {
-      user.avatar = await resizeImage(avatar.buffer, avatarWidth, avatarHeight);
+      // user.avatar = await resizeImage(avatar.buffer, avatarWidth, avatarHeight);
     }
     await user.save();
     const accessToken = user.generateAccessToken();

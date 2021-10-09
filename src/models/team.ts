@@ -1,13 +1,5 @@
-import { Schema, model, Model, Types } from 'mongoose';
+import { Schema, model, Model } from 'mongoose';
 
-export interface ITeam {
-  name: string;
-  permalink: string;
-  flagIcon: Buffer;
-}
-export interface ITeamDoc extends ITeam {
-  nameDisplay: string;
-}
 interface ITeamModel extends Model<ITeamDoc> {}
 
 const validatePermalinkPattern = function (permalink: string) {
@@ -40,7 +32,7 @@ const teamSchema = new Schema<ITeamDoc, ITeamModel, ITeamDoc>(
       ],
     },
     flagIcon: {
-      type: Schema.Types.Buffer,
+      type: String,
       required: true,
     },
   },
@@ -48,17 +40,6 @@ const teamSchema = new Schema<ITeamDoc, ITeamModel, ITeamDoc>(
     timestamps: true,
   }
 );
-
-teamSchema.pre('validate', function (next) {
-  const team = this;
-
-  team.nameDisplay = '';
-  if (team.name) {
-    team.nameDisplay = team.name;
-    team.name = team.name.toLowerCase();
-  }
-  next();
-});
 
 const TeamModel = model<ITeamDoc, ITeamModel>('Team', teamSchema);
 
