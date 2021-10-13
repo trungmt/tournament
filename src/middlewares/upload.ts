@@ -1,5 +1,5 @@
 import path from 'path';
-import { readdir, stat, unlink, mkdir, rename } from 'fs/promises';
+import { readdir, stat, unlink, mkdir, rename, copyFile } from 'fs/promises';
 import { RequestHandler, Request, Response, NextFunction } from 'express';
 import { ObjectID } from 'mongodb';
 import FileType, { FileTypeResult } from 'file-type';
@@ -197,8 +197,9 @@ export const removeOldTempFiles = async (
 export const moveUploadFile = async (
   entityName: string, //TODO: make entityNames type, enum, const
   fileName: string,
-  resizeWidth?: number
-): Promise<void> => {
+  resizeWidth?: number,
+  isDeleteTemp: boolean = true
+): Promise<string> => {
   const tempFilePath = path.join(
     process.env.UPLOAD_TEMP_FILE_DIR!,
     entityName,
@@ -211,12 +212,18 @@ export const moveUploadFile = async (
     await mkdir(targetDirectory, { recursive: true });
     if (resizeWidth) {
       await resizeImage(tempFilePath, resizeWidth, targetFilePath);
-      await unlink(tempFilePath);
-    } else {
+      if (isDeleteTemp === true) {
+        await unlink(tempFilePath);
+      }
+    } else if (isDeleteTemp === true) {
       await rename(tempFilePath, targetFilePath);
+    } else {
+      await copyFile(tempFilePath, targetFilePath);
     }
   } catch (error) {
     console.log('Error moveUploadFile', error);
     throw new BaseError(`Error occurs when uploading image`, '', 500, false);
   }
+
+  return targetFilePath;
 };
