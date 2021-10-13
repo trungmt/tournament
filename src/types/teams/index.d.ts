@@ -4,6 +4,10 @@ interface ITeam {
   flagIcon: string;
 }
 
+interface ITeamBodyForm {
+  body: ITeam;
+}
+
 interface ITeamDoc extends ITeam {
   nameDisplay: string;
 }
