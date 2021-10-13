@@ -70,7 +70,7 @@ export const uploadSingleFile = (
     next: NextFunction
   ) => {
     uploadHandler(req, res, async function (error) {
-      if (req.errors![fieldName]) {
+      if (req.errors && req.errors[fieldName]) {
         next();
         return;
       }
@@ -79,30 +79,14 @@ export const uploadSingleFile = (
         if (error instanceof MulterError) {
           req.errors![fieldName] = error.message;
           next();
-          return;
+        } else {
+          next(error);
         }
-
-        next(error);
         return;
       }
 
-      const fileType = await getFileTypeFromDisk(req.file!.path);
-      if (
-        typeof fileType === 'undefined' ||
-        !verifyFileExtension(
-          fileType.ext,
-          process.env.ACCEPT_IMAGE_EXTENSION_PATTERN!
-        )
-      ) {
-        req.errors![
-          fieldName
-        ] = `File type not allowed. Please upload image with these types: jpg, jpeg, png, gif, tiff`;
-      } else {
-        req.body[fieldName] = req.file;
-        next();
-      }
-
-      next(error);
+      req.body[fieldName] = req.file;
+      next();
     });
   };
 
@@ -147,14 +131,13 @@ export const resizeImage = async (
   }
 };
 
-const getFileTypeFromDisk = async (
+export const getFileTypeFromDisk = async (
   filePath: string
 ): Promise<FileTypeResult | undefined> => {
-  // TODO: how to handle error when async running?
   return await FileType.fromFile(filePath);
 };
 
-const verifyFileExtension = (
+export const verifyFileExtension = (
   fileExtension: string,
   acceptedExtension: RegExp | string[] | string
 ): boolean => {
@@ -170,7 +153,6 @@ export const removeOldTempFiles = async (
   removeTimeMs: number,
   dirname: string = process.env.UPLOAD_TEMP_FILE_DIR!
 ): Promise<boolean> => {
-  console.log('dirname', dirname);
   let result = false;
   try {
     const currentTimestamp = new Date().getTime();
