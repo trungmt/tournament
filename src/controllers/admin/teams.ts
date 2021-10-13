@@ -1,10 +1,10 @@
 import { NextFunction, Request, Response } from 'express';
+import AdminAbstractController from '../AdminAbstractController';
+import { ModifyFormParams } from '../AdminEntityControllerInterface';
 import Team from '../../models/team';
 import { moveUploadFile } from '../../middlewares/upload';
 import { CustomResponse } from '../../services/CustomResponse';
 import BaseError from '../../exceptions/BaseError';
-import AdminAbstractController from '../AdminAbstractController';
-import { ModifyFormParams } from '../AdminEntityControllerInterface';
 export default class TeamController extends AdminAbstractController {
   constructor(entityName: string) {
     super(entityName);
