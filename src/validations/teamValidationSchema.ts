@@ -1,12 +1,66 @@
 import path from 'path';
 import { access } from 'fs/promises';
-import Team from '../models/team';
-import BaseError from '../exceptions/BaseError';
 import { Document, FilterQuery } from 'mongoose';
 import { object, string, mixed, TestFunction, SchemaOf } from 'yup';
+import Team from '../models/team';
+import BaseError from '../exceptions/BaseError';
+import {
+  getFileTypeFromDisk,
+  verifyFileExtension,
+} from '../middlewares/upload';
 interface ITeamFileForm {
-  flagIcon?: Express.Multer.File;
+  body: {
+    flagIcon?: Express.Multer.File;
+  };
 }
+
+const flagIconFileUploadValidation: TestFunction<
+  Express.Multer.File | undefined,
+  Record<string, any>
+> = async function (this, flagIcon) {
+  if (typeof flagIcon === 'undefined') {
+    return true;
+  }
+
+  let errorMessage = '';
+  if (flagIcon.size === 0) {
+    errorMessage = '${label} file is empty.';
+  } else {
+    try {
+      const fileType = await getFileTypeFromDisk(flagIcon.path);
+      if (
+        typeof fileType === 'undefined' ||
+        !verifyFileExtension(
+          fileType.ext,
+          process.env.ACCEPT_IMAGE_EXTENSION_PATTERN!
+        )
+      ) {
+        errorMessage =
+          'File type not allowed. Please upload image with these types: jpg, jpeg, png, gif, tiff';
+      }
+    } catch (error) {
+      // handle system error
+      const systemError = new BaseError(
+        `Error occurs when validate Flag Icon`,
+        '',
+        500,
+        false
+      );
+
+      const nextFunc = this.options.context?.next;
+      if (typeof nextFunc !== 'undefined') {
+        nextFunc(systemError);
+      }
+      return false;
+    }
+  }
+
+  if (errorMessage !== '') {
+    return this.createError({ message: errorMessage, type: 'custom' });
+  }
+
+  return true;
+};
 
 const flagIconFilePathValidation: TestFunction<string | undefined> =
   async function (this, value) {
@@ -118,36 +172,46 @@ const duplicateNameValidation: TestFunction<
 };
 
 // NOTE:(message function - https://github.com/sideway/joi/blob/83092836583a7f4ce16cbf116b8776737e80d16f/test/base.js#L1920)
-export const teamFieldValidationSchema: SchemaOf<ITeam> = object({
-  name: string()
-    .required()
-    .label('Name')
-    .test(
-      'duplicateNameValidation',
-      '${label} value is already existed',
-      duplicateNameValidation
-    ),
-  permalink: string()
-    .required()
-    .matches(/^([a-zA-Z0-9]+-)*[a-zA-Z0-9]+$/)
-    .lowercase()
-    .label('Permalink')
-    .test(
-      'duplicatePermalinkValidation',
-      '${label} value is already existed',
-      duplicatePermalinkValidation
-    ),
-  flagIcon: string()
-    .required()
-    .label('Flag Icon')
-    .test(
-      'flagIconFilePathValidation',
-      'Invalid ${label} file path',
-      flagIconFilePathValidation
-    ),
+export const teamFieldValidationSchema: SchemaOf<ITeamBodyForm> = object({
+  body: object({
+    name: string()
+      .required()
+      .label('Name')
+      .test(
+        'duplicateNameValidation',
+        '${label} value is already existed',
+        duplicateNameValidation
+      ),
+    permalink: string()
+      .required()
+      .matches(
+        /^([a-zA-Z0-9]+-)*[a-zA-Z0-9]+$/,
+        '${label} only accepts alphanumeric and dash'
+      )
+      .lowercase()
+      .label('Permalink')
+      .test(
+        'duplicatePermalinkValidation',
+        '${label} value is already existed',
+        duplicatePermalinkValidation
+      ),
+    flagIcon: string()
+      .required()
+      .label('Flag Icon')
+      .test(
+        'flagIconFilePathValidation',
+        'Invalid ${label} file path',
+        flagIconFilePathValidation
+      ),
+  }),
 });
 
 export const teamFileValidationSchema: SchemaOf<ITeamFileForm> = object({
-  // it's a workaround https://github.com/jquense/yup/pull/1358/files
-  flagIcon: mixed<Express.Multer.File>().required().label('Flag Icon'),
+  body: object({
+    //it's a workaround https://github.com/jquense/yup/pull/1358/files
+    flagIcon: mixed<Express.Multer.File>()
+      .required()
+      .label('Flag Icon')
+      .test(flagIconFileUploadValidation),
+  }),
 });
