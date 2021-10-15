@@ -161,7 +161,13 @@ export const removeOldTempFiles = async (
     // list files and directories in `dirname`
     const files = await readdir(dirname, { withFileTypes: true });
 
-    // loop through files and directory in `dirname`
+    // https://stackoverflow.com/questions/37576685/using-async-await-with-a-foreach-loop
+    await Promise.all(
+      // loop through files and directory in `dirname`
+      files.map(async dirent => {
+        result = true;
+        const filePath = path.join(dirname, dirent.name);
+
         // wont touch ignore files
         console.log('ignoreFileNames', ignoreFileNames);
         console.log(
@@ -176,24 +182,29 @@ export const removeOldTempFiles = async (
           return;
         }
 
-      // if `filePath` is directory, do removeOldTempFiles(timeDistance, `filePath`)
-      if (dirent.isDirectory()) {
-        const subResult = await removeOldTempFiles(removeTimeMs, filePath);
-        return;
-      }
+        // if `filePath` is directory, do removeOldTempFiles(timeDistance, `filePath`)
+        if (dirent.isDirectory()) {
+          const subResult = await removeOldTempFiles(
+            removeTimeMs,
+            ignoreFileNames,
+            filePath
+          );
+          return;
+        }
 
-      // if `filepath` is file get status of file for file's modification time
-      const fileStat = await stat(filePath);
+        // if `filepath` is file get status of file for file's modification time
+        const fileStat = await stat(filePath);
 
-      // if file modification date is older than removeTimeMs --> delete that file
-      if (fileStat.mtimeMs < currentTimestamp - removeTimeMs) {
-        console.log(filePath, 'deleted');
-        unlink(filePath);
-        result = true;
-        return result;
-      }
-      console.log(filePath, 'NOT deleted');
-    });
+        // if file modification date is older than removeTimeMs --> delete that file
+        if (fileStat.mtimeMs < currentTimestamp - removeTimeMs) {
+          // console.log(filePath, 'deleted');
+          await unlink(filePath);
+          result = true;
+          return result;
+        }
+        // console.log(filePath, 'NOT deleted');
+      })
+    );
   } catch (error) {
     console.log('Error removeOldTempFiles', error);
   }
