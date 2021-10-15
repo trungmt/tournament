@@ -1,6 +1,7 @@
 import request from 'supertest';
 import app from '../app';
 import { setupDatabase } from './fixtures/db';
+import { removeOldTempFiles } from '../middlewares/upload';
 import Team from '../models/team';
 
 const createTeamURL = '/api/admin/teams';
@@ -8,6 +9,10 @@ const uploadFlagIconURL = '/api/admin/teams/upload/flagIcon';
 
 let userOneToken: string;
 let userTwoToken: string;
+
+afterAll(async () => {
+  await removeOldTempFiles(0);
+});
 
 beforeEach(async () => {
   const initDBResult = await setupDatabase();
