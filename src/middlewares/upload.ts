@@ -151,6 +151,7 @@ export const verifyFileExtension = (
 
 export const removeOldTempFiles = async (
   removeTimeMs: number,
+  ignoreFileNames: string[] = process.env.OLD_TEMP_FILE_IGNORE_LIST!.split(','),
   dirname: string = process.env.UPLOAD_TEMP_FILE_DIR!
 ): Promise<boolean> => {
   let result = false;
@@ -161,14 +162,19 @@ export const removeOldTempFiles = async (
     const files = await readdir(dirname, { withFileTypes: true });
 
     // loop through files and directory in `dirname`
-    files.forEach(async dirent => {
-      result = true;
-      const filePath = path.join(dirname, dirent.name);
+        // wont touch ignore files
+        console.log('ignoreFileNames', ignoreFileNames);
+        console.log(
+          'ignoreFileNames.includes(dirent.name)',
+          ignoreFileNames.includes(dirent.name)
+        );
 
-      // wont touch special files
-      if (dirent.name === '.gitkeep') {
-        return;
-      }
+        if (
+          typeof ignoreFileNames !== 'undefined' &&
+          ignoreFileNames.includes(dirent.name)
+        ) {
+          return;
+        }
 
       // if `filePath` is directory, do removeOldTempFiles(timeDistance, `filePath`)
       if (dirent.isDirectory()) {
