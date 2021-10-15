@@ -1,5 +1,5 @@
 import path from 'path';
-import { readdir, stat, unlink, mkdir, rename } from 'fs/promises';
+import { readdir, stat, unlink, mkdir, rename, copyFile } from 'fs/promises';
 import { RequestHandler, Request, Response, NextFunction } from 'express';
 import { ObjectID } from 'mongodb';
 import FileType, { FileTypeResult } from 'file-type';
@@ -70,7 +70,7 @@ export const uploadSingleFile = (
     next: NextFunction
   ) => {
     uploadHandler(req, res, async function (error) {
-      if (req.errors![fieldName]) {
+      if (req.errors && req.errors[fieldName]) {
         next();
         return;
       }
@@ -79,30 +79,14 @@ export const uploadSingleFile = (
         if (error instanceof MulterError) {
           req.errors![fieldName] = error.message;
           next();
-          return;
+        } else {
+          next(error);
         }
-
-        next(error);
         return;
       }
 
-      const fileType = await getFileTypeFromDisk(req.file!.path);
-      if (
-        typeof fileType === 'undefined' ||
-        !verifyFileExtension(
-          fileType.ext,
-          process.env.ACCEPT_IMAGE_EXTENSION_PATTERN!
-        )
-      ) {
-        req.errors![
-          fieldName
-        ] = `File type not allowed. Please upload image with these types: jpg, jpeg, png, gif, tiff`;
-      } else {
-        req.body[fieldName] = req.file;
-        next();
-      }
-
-      next(error);
+      req.body[fieldName] = req.file;
+      next();
     });
   };
 
@@ -120,7 +104,8 @@ export const uploadSingleFile = (
 export const resizeImage = async (
   inputFilePath: string,
   width: number,
-  outputFilePath?: string
+  outputFilePath?: string,
+  isDeleteInput: boolean = false
 ): Promise<void | Buffer> => {
   try {
     const resizedFile = sharp(inputFilePath).resize({
@@ -133,6 +118,10 @@ export const resizeImage = async (
     }
 
     await resizedFile.toFile(outputFilePath);
+
+    if (isDeleteInput === true) {
+      await unlink(inputFilePath);
+    }
     return;
   } catch (error) {
     if (error instanceof Error) {
@@ -147,14 +136,13 @@ export const resizeImage = async (
   }
 };
 
-const getFileTypeFromDisk = async (
+export const getFileTypeFromDisk = async (
   filePath: string
 ): Promise<FileTypeResult | undefined> => {
-  // TODO: how to handle error when async running?
   return await FileType.fromFile(filePath);
 };
 
-const verifyFileExtension = (
+export const verifyFileExtension = (
   fileExtension: string,
   acceptedExtension: RegExp | string[] | string
 ): boolean => {
@@ -168,9 +156,9 @@ const verifyFileExtension = (
 
 export const removeOldTempFiles = async (
   removeTimeMs: number,
+  ignoreFileNames: string[] = process.env.OLD_TEMP_FILE_IGNORE_LIST!.split(','),
   dirname: string = process.env.UPLOAD_TEMP_FILE_DIR!
 ): Promise<boolean> => {
-  console.log('dirname', dirname);
   let result = false;
   try {
     const currentTimestamp = new Date().getTime();
@@ -178,34 +166,50 @@ export const removeOldTempFiles = async (
     // list files and directories in `dirname`
     const files = await readdir(dirname, { withFileTypes: true });
 
-    // loop through files and directory in `dirname`
-    files.forEach(async dirent => {
-      result = true;
-      const filePath = path.join(dirname, dirent.name);
-
-      // wont touch special files
-      if (dirent.name === '.gitkeep') {
-        return;
-      }
-
-      // if `filePath` is directory, do removeOldTempFiles(timeDistance, `filePath`)
-      if (dirent.isDirectory()) {
-        const subResult = await removeOldTempFiles(removeTimeMs, filePath);
-        return;
-      }
-
-      // if `filepath` is file get status of file for file's modification time
-      const fileStat = await stat(filePath);
-
-      // if file modification date is older than removeTimeMs --> delete that file
-      if (fileStat.mtimeMs < currentTimestamp - removeTimeMs) {
-        console.log(filePath, 'deleted');
-        unlink(filePath);
+    // https://stackoverflow.com/questions/37576685/using-async-await-with-a-foreach-loop
+    await Promise.all(
+      // loop through files and directory in `dirname`
+      files.map(async dirent => {
         result = true;
-        return result;
-      }
-      console.log(filePath, 'NOT deleted');
-    });
+        const filePath = path.join(dirname, dirent.name);
+
+        // wont touch ignore files
+        console.log('ignoreFileNames', ignoreFileNames);
+        console.log(
+          'ignoreFileNames.includes(dirent.name)',
+          ignoreFileNames.includes(dirent.name)
+        );
+
+        if (
+          typeof ignoreFileNames !== 'undefined' &&
+          ignoreFileNames.includes(dirent.name)
+        ) {
+          return;
+        }
+
+        // if `filePath` is directory, do removeOldTempFiles(timeDistance, `filePath`)
+        if (dirent.isDirectory()) {
+          const subResult = await removeOldTempFiles(
+            removeTimeMs,
+            ignoreFileNames,
+            filePath
+          );
+          return;
+        }
+
+        // if `filepath` is file get status of file for file's modification time
+        const fileStat = await stat(filePath);
+
+        // if file modification date is older than removeTimeMs --> delete that file
+        if (fileStat.mtimeMs < currentTimestamp - removeTimeMs) {
+          // console.log(filePath, 'deleted');
+          await unlink(filePath);
+          result = true;
+          return result;
+        }
+        // console.log(filePath, 'NOT deleted');
+      })
+    );
   } catch (error) {
     console.log('Error removeOldTempFiles', error);
   }
@@ -215,8 +219,9 @@ export const removeOldTempFiles = async (
 export const moveUploadFile = async (
   entityName: string, //TODO: make entityNames type, enum, const
   fileName: string,
-  resizeWidth?: number
-): Promise<void> => {
+  resizeWidth?: number,
+  isDeleteTemp: boolean = true
+): Promise<string> => {
   const tempFilePath = path.join(
     process.env.UPLOAD_TEMP_FILE_DIR!,
     entityName,
@@ -228,13 +233,21 @@ export const moveUploadFile = async (
   try {
     await mkdir(targetDirectory, { recursive: true });
     if (resizeWidth) {
-      await resizeImage(tempFilePath, resizeWidth, targetFilePath);
-      await unlink(tempFilePath);
-    } else {
+      await resizeImage(
+        tempFilePath,
+        resizeWidth,
+        targetFilePath,
+        isDeleteTemp
+      );
+    } else if (isDeleteTemp === true) {
       await rename(tempFilePath, targetFilePath);
+    } else {
+      await copyFile(tempFilePath, targetFilePath);
     }
   } catch (error) {
     console.log('Error moveUploadFile', error);
     throw new BaseError(`Error occurs when uploading image`, '', 500, false);
   }
+
+  return targetFilePath;
 };

@@ -1,6 +1,7 @@
-import fs from 'fs';
 import User, { IUser } from '../../models/user';
-import Team, { ITeam } from '../../models/team';
+import Team from '../../models/team';
+import { moveUploadFile } from '../../middlewares/upload';
+import path from 'path';
 
 export const userOne: IUser = {
   username: 'trungtm',
@@ -14,31 +15,36 @@ export const userTwo: IUser = {
   password: 'abcd1234!',
 };
 
-let flagIconBuffer: Buffer;
-try {
-  flagIconBuffer = fs.readFileSync(
-    'src/tests/fixtures/images/teams/england.jpg'
-  );
-} catch (error) {
-  throw new Error('no file');
-}
-export const teamOne: ITeam = {
-  name: 'England',
-  permalink: 'england',
-  flagIcon: flagIconBuffer,
-};
-
 export const setupDatabase = async () => {
   await User.deleteMany();
   await Team.deleteMany();
 
-  const userOneDoc = await new User(userOne).save();
-  const userOneToken = userOneDoc.generateAccessToken();
+  const fileName = 'england.jpg';
+  const flagIconWidth = parseInt(process.env.DEFAULT_IMAGE_WIDTH!);
+  try {
+    const targetFilePath = await moveUploadFile(
+      process.env.ENTITY_TEAMS!,
+      fileName,
+      flagIconWidth,
+      false
+    );
 
-  const userTwoDoc = await new User(userTwo).save();
-  const userTwoToken = userTwoDoc.generateAccessToken();
+    const teamOne: ITeamDoc = {
+      name: 'england',
+      nameDisplay: 'England',
+      permalink: 'england',
+      flagIcon: targetFilePath,
+    };
 
-  await new Team(teamOne).save();
+    const userOneDoc = await new User(userOne).save();
+    const userOneToken = userOneDoc.generateAccessToken();
 
-  return { userOneToken, userTwoToken };
+    const userTwoDoc = await new User(userTwo).save();
+    const userTwoToken = userTwoDoc.generateAccessToken();
+
+    await new Team(teamOne).save();
+    return { userOneToken, userTwoToken };
+  } catch (error) {
+    throw new Error('no file');
+  }
 };

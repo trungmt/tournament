@@ -1,10 +1,10 @@
 import { NextFunction, Request, Response } from 'express';
+import AdminAbstractController from '../AdminAbstractController';
+import { ModifyFormParams } from '../AdminEntityControllerInterface';
 import Team from '../../models/team';
 import { moveUploadFile } from '../../middlewares/upload';
 import { CustomResponse } from '../../services/CustomResponse';
 import BaseError from '../../exceptions/BaseError';
-import AdminAbstractController from '../AdminAbstractController';
-import { ModifyFormParams } from '../AdminEntityControllerInterface';
 export default class TeamController extends AdminAbstractController {
   constructor(entityName: string) {
     super(entityName);
@@ -20,7 +20,6 @@ export default class TeamController extends AdminAbstractController {
     const team = new Team(teamFormData);
 
     //TODO: function to prepare env const
-    //TODO: check if there are redudant inputs
     const flagIconWidth = parseInt(process.env.DEFAULT_IMAGE_WIDTH!);
     try {
       await moveUploadFile(

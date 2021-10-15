@@ -1,12 +1,18 @@
 import request from 'supertest';
 import app from '../app';
-import { setupDatabase, userOne } from './fixtures/db';
+import { setupDatabase } from './fixtures/db';
+import { removeOldTempFiles } from '../middlewares/upload';
 import Team from '../models/team';
 
 const createTeamURL = '/api/admin/teams';
+const uploadFlagIconURL = '/api/admin/teams/upload/flagIcon';
 
 let userOneToken: string;
 let userTwoToken: string;
+
+afterAll(async () => {
+  await removeOldTempFiles(0);
+});
 
 beforeEach(async () => {
   const initDBResult = await setupDatabase();
@@ -14,18 +20,98 @@ beforeEach(async () => {
   userTwoToken = initDBResult.userTwoToken;
 });
 
+describe(`POST ${uploadFlagIconURL}`, () => {
+  test('Should not upload flagIcon for unauthorized user', async () => {
+    await request(app)
+      .post(uploadFlagIconURL)
+      // with attach(), test run inconsistently,
+      // sometimes there are failed testcase with `read ECONNRESET` or `write ECONNABORTED` errors
+      .set('Connection', 'keep-alive')
+      .attach('flagIcon', 'src/tests/fixtures/images/teams/england.jpg')
+      .expect(401);
+  });
+
+  // TODO: check if file exist in fixtures/images/...
+  test('Should response error in case no file attached', async () => {
+    const response = await request(app)
+      .post(uploadFlagIconURL)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .expect(422);
+
+    expect(response.body.name).toBe('ValidationError');
+    expect(response.body.data.flagIcon).toBe('Flag Icon is a required field');
+  });
+
+  test('Should response error in case empty file attached', async () => {
+    const response = await request(app)
+      .post(uploadFlagIconURL)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .attach('flagIcon', 'src/tests/fixtures/images/teams/england_empty.jpg')
+      .expect(422);
+
+    expect(response.body.name).toBe('ValidationError');
+    expect(response.body.data.flagIcon).toBe('Flag Icon file is empty.');
+  });
+
+  test('Should response error in case upload file with exceed filesize', async () => {
+    const response = await request(app)
+      .post(uploadFlagIconURL)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .attach('flagIcon', 'src/tests/fixtures/images/teams/england_large.jpg')
+      .expect(422);
+
+    expect(response.body.name).toBe('ValidationError');
+    expect(response.body.data.flagIcon).toBe('File too large');
+  });
+
+  test('Should response error in case upload file with wrong extension', async () => {
+    const response = await request(app)
+      .post(uploadFlagIconURL)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .attach('flagIcon', 'src/tests/fixtures/images/teams/england.txt')
+      .expect(422);
+
+    expect(response.body.name).toBe('ValidationError');
+    expect(response.body.data.flagIcon).toBe(
+      'File type not allowed. Please upload image with these types: jpg, jpeg, png, gif, tiff'
+    );
+  });
+
+  test('Should upload flagIcon', async () => {
+    const response = await request(app)
+      .post(uploadFlagIconURL)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .attach('flagIcon', 'src/tests/fixtures/images/teams/england.jpg')
+      .expect(201);
+  });
+});
+
 describe('POST /api/admin/teams', () => {
+  let flagIcon: string = '';
+  beforeEach(async () => {
+    const responseUploadFlagIcon = await request(app)
+      .post(uploadFlagIconURL)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .attach('flagIcon', 'src/tests/fixtures/images/teams/england.jpg');
+
+    flagIcon = responseUploadFlagIcon.body.data.filename;
+  });
+
   test('Should not create new team for unauthorized user', async () => {
     await request(app)
       .post(createTeamURL)
       .set('Connection', 'keep-alive')
-      .field({
+      .send({
         name: 'Italy',
         permalink: 'Italy',
+        flagIcon,
       })
-      .attach('flagIcon', 'src/tests/fixtures/images/teams/england.jpg')
-      // with attach(), test run inconsistently,
-      // sometimes there are failed testcase with `read ECONNRESET` or `write ECONNABORTED` errors
       .expect(401);
   });
 
@@ -34,18 +120,14 @@ describe('POST /api/admin/teams', () => {
       .post(createTeamURL)
       .set('Authorization', `Bearer ${userOneToken}`)
       .set('Connection', 'keep-alive')
-      .field({
+      .send({
         permalink: 'italy',
+        flagIcon,
       })
-      .attach('flagIcon', 'src/tests/fixtures/images/teams/england.jpg')
-      .expect(400);
+      .expect(422);
 
     expect(response.body.name).toBe('ValidationError');
-    expect(response.body.errors.name.properties).toMatchObject({
-      message: 'Path `name` is required.',
-      type: 'required',
-      path: 'name',
-    });
+    expect(response.body.data.name).toBe('Name is a required field');
   });
 
   test('Should not create new team missing permalink', async () => {
@@ -53,18 +135,14 @@ describe('POST /api/admin/teams', () => {
       .post(createTeamURL)
       .set('Authorization', `Bearer ${userOneToken}`)
       .set('Connection', 'keep-alive')
-      .field({
+      .send({
         name: 'Italy',
+        flagIcon,
       })
-      .attach('flagIcon', 'src/tests/fixtures/images/teams/england.jpg')
-      .expect(400);
+      .expect(422);
 
     expect(response.body.name).toBe('ValidationError');
-    expect(response.body.errors.permalink.properties).toMatchObject({
-      message: 'Path `permalink` is required.',
-      type: 'required',
-      path: 'permalink',
-    });
+    expect(response.body.data.permalink).toBe('Permalink is a required field');
   });
 
   describe('Should not create new team with wrong permalink pattern', () => {
@@ -74,15 +152,15 @@ describe('POST /api/admin/teams', () => {
         .post(createTeamURL)
         .set('Authorization', `Bearer ${userOneToken}`)
         .set('Connection', 'keep-alive')
-        .field({
+        .send({
           name: 'Italy',
           permalink: dashFirstPermalink,
+          flagIcon,
         })
-        .attach('flagIcon', 'src/tests/fixtures/images/teams/england.jpg')
-        .expect(400);
+        .expect(422);
 
       expect(response.body.name).toBe('ValidationError');
-      expect(response.body.errors.permalink.properties.message).toBe(
+      expect(response.body.data.permalink).toBe(
         'Permalink only accepts alphanumeric and dash'
       );
     });
@@ -93,15 +171,15 @@ describe('POST /api/admin/teams', () => {
         .post(createTeamURL)
         .set('Authorization', `Bearer ${userOneToken}`)
         .set('Connection', 'keep-alive')
-        .field({
+        .send({
           name: 'Italy',
           permalink: specialcharsPermalink,
+          flagIcon,
         })
-        .attach('flagIcon', 'src/tests/fixtures/images/teams/england.jpg')
-        .expect(400);
+        .expect(422);
 
       expect(response.body.name).toBe('ValidationError');
-      expect(response.body.errors.permalink.properties.message).toBe(
+      expect(response.body.data.permalink).toBe(
         'Permalink only accepts alphanumeric and dash'
       );
     });
@@ -113,30 +191,64 @@ describe('POST /api/admin/teams', () => {
         .post(createTeamURL)
         .set('Authorization', `Bearer ${userOneToken}`)
         .set('Connection', 'keep-alive')
-        .field({
+        .send({
           name: 'England',
           permalink: 'something',
+          flagIcon,
         })
-        .attach('flagIcon', 'src/tests/fixtures/images/teams/england.jpg')
-        .expect(400);
+        .expect(422);
 
-      expect(response.body.code).toBe(11000);
+      expect(response.body.name).toBe('ValidationError');
+      expect(response.body.data.name).toBe('Name value is already existed');
     });
 
-    test('Duplicate in name', async () => {
+    test('Duplicate in permalink', async () => {
       const response = await request(app)
         .post(createTeamURL)
         .set('Authorization', `Bearer ${userOneToken}`)
         .set('Connection', 'keep-alive')
-        .field({
+        .send({
           name: 'something',
           permalink: 'england',
         })
-        .attach('flagIcon', 'src/tests/fixtures/images/teams/england.jpg')
-        .expect(400);
+        .expect(422);
 
-      expect(response.body.code).toBe(11000);
+      expect(response.body.name).toBe('ValidationError');
+      expect(response.body.data.permalink).toBe(
+        'Permalink value is already existed'
+      );
     });
+  });
+
+  test('Should not create new team missing flagIcon', async () => {
+    const response = await request(app)
+      .post(createTeamURL)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .send({
+        name: 'Italy',
+        permalink: 'italy',
+      })
+      .expect(422);
+
+    expect(response.body.name).toBe('ValidationError');
+    expect(response.body.data.flagIcon).toBe('Flag Icon is a required field');
+  });
+
+  test('Should not create new team with not exists flagIcon filename', async () => {
+    const response = await request(app)
+      .post(createTeamURL)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .send({
+        name: 'Italy',
+        permalink: 'italy',
+        flagIcon: 'not-exists.jpg',
+      })
+      .expect(422);
+
+    expect(response.body.name).toBe('ValidationError');
+    expect(response.body.data.flagIcon).toBe('Invalid Flag Icon file path');
   });
 
   test('Should create a new team', async () => {
@@ -147,11 +259,11 @@ describe('POST /api/admin/teams', () => {
       .post(createTeamURL)
       .set('Authorization', `Bearer ${userOneToken}`)
       .set('Connection', 'keep-alive')
-      .field({
+      .send({
         name,
         permalink,
+        flagIcon,
       })
-      .attach('flagIcon', 'src/tests/fixtures/images/teams/england.jpg')
       .expect(201);
 
     // confirm that team has been inserted
@@ -160,77 +272,5 @@ describe('POST /api/admin/teams', () => {
     expect(team!.nameDisplay).toBe(name.trim());
     expect(team!.permalink).toBe(permalink.toLowerCase());
     expect(team!.flagIcon).toBeTruthy();
-  });
-
-  describe('upload flagIcon testcases', () => {
-    // TODO: check if file exist in fixtures/images/...
-    test('case of no file attached', async () => {
-      const response = await request(app)
-        .post(createTeamURL)
-        .set('Authorization', `Bearer ${userOneToken}`)
-        .set('Connection', 'keep-alive')
-        .field({
-          name: 'Italy',
-          permalink: 'italy',
-        })
-        .expect(400);
-
-      expect(response.body.name).toBe('ValidationError');
-      expect(response.body.message).toBe(
-        'Team validation failed: flagIcon: Path `flagIcon` is required.'
-      );
-    });
-
-    test('case of empty file attached', async () => {
-      const response = await request(app)
-        .post(createTeamURL)
-        .set('Authorization', `Bearer ${userOneToken}`)
-        .set('Connection', 'keep-alive')
-        .field({
-          name: 'Italy',
-          permalink: 'italy',
-        })
-        .attach('flagIcon', 'src/tests/fixtures/images/teams/england_empty.jpg')
-        .expect(400);
-
-      expect(response.body.name).toBe('ValidationError');
-      expect(response.body.message).toBe(
-        'Team validation failed: flagIcon: Path `flagIcon` is required.'
-      );
-    });
-
-    test('upload flagIcon with exceed filesize', async () => {
-      const response = await request(app)
-        .post(createTeamURL)
-        .set('Authorization', `Bearer ${userOneToken}`)
-        .set('Connection', 'keep-alive')
-        .field({
-          name: 'Italy',
-          permalink: 'italy',
-        })
-        .attach('flagIcon', 'src/tests/fixtures/images/teams/england_large.jpg')
-        .expect(400);
-
-      expect(response.body.name).toBe('MulterError');
-      expect(response.body.field).toBe('flagIcon');
-      expect(response.body.code).toBe('LIMIT_FILE_SIZE');
-    });
-
-    test('upload flagIcon with exceed filesize', async () => {
-      const response = await request(app)
-        .post(createTeamURL)
-        .set('Authorization', `Bearer ${userOneToken}`)
-        .set('Connection', 'keep-alive')
-        .field({
-          name: 'Italy',
-          permalink: 'italy',
-        })
-        .attach('flagIcon', 'src/tests/fixtures/images/teams/england.txt')
-        .expect(400);
-
-      expect(response.body.message).toBe(
-        'File type not allowed. Please upload image with these types: jpg, jpeg, png, gif, tiff'
-      );
-    });
   });
 });

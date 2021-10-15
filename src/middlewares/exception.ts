@@ -9,6 +9,14 @@ export const logException = (
 ) => {
   // console.log(`Error at route ${req.route}:`);
   // console.log(error);
+
+  if (
+    process.env.NODE_ENV === 'development' ||
+    (process.env.NODE_ENV === 'testing' &&
+      process.env.ENABLE_LOGGING === 'true')
+  ) {
+    console.log('error', error);
+  }
   next(error);
 };
 
@@ -19,7 +27,6 @@ export const responseException = (
   next: NextFunction
 ) => {
   // TODO: check if error is BaseError, if not create new BaseError object
-  console.log('error', error);
   let statusCode = 500;
   if (error.statusCode) {
     statusCode = error.statusCode;

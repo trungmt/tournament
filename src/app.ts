@@ -13,6 +13,11 @@ const app = express();
 const port = process.env.PORT || 8080;
 
 app.use(express.json());
+app.use(
+  express.urlencoded({
+    extended: true,
+  })
+);
 app.use('/auth', authRouter);
 app.use('/api/admin', adminRouter);
 

@@ -1,3 +1,5 @@
 node_modules/
 start_db.sh
 uploads/
+keepfiles/
+src/tests/fixtures/images/
