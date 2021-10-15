@@ -4,6 +4,7 @@ import { setupDatabase } from './fixtures/db';
 import { removeOldTempFiles } from '../middlewares/upload';
 import Team from '../models/team';
 
+// TODO: add locale files to store constants related to validation messages
 const createTeamURL = '/api/admin/teams';
 const uploadFlagIconURL = '/api/admin/teams/upload/flagIcon';
 
