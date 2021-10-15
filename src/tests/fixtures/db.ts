@@ -21,15 +21,10 @@ export const setupDatabase = async () => {
 
   const fileName = 'england.jpg';
   const flagIconWidth = parseInt(process.env.DEFAULT_IMAGE_WIDTH!);
-  const targetFilePath = path.join(
-    process.env.UPLOAD_FILE_DIR!,
-    process.env.ENTITY_TEAMS!,
-    fileName
-  );
   try {
     const targetFilePath = await moveUploadFile(
       process.env.ENTITY_TEAMS!,
-      'england.jpg',
+      fileName,
       flagIconWidth,
       false
     );

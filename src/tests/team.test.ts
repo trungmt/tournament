@@ -80,151 +80,197 @@ describe(`POST ${uploadFlagIconURL}`, () => {
       'File type not allowed. Please upload image with these types: jpg, jpeg, png, gif, tiff'
     );
   });
+
+  test('Should upload flagIcon', async () => {
+    const response = await request(app)
+      .post(uploadFlagIconURL)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .attach('flagIcon', 'src/tests/fixtures/images/teams/england.jpg')
+      .expect(201);
+  });
 });
 
-// describe('POST /api/admin/teams', () => {
-//   test('Should not create new team for unauthorized user', async () => {
-//     await request(app)
-//       .post(createTeamURL)
-//       .set('Connection', 'keep-alive')
-//       .field({
-//         name: 'Italy',
-//         permalink: 'Italy',
-//       })
-//       .attach('flagIcon', 'src/tests/fixtures/images/teams/england.jpg')
-//       .expect(401);
-//   });
+describe('POST /api/admin/teams', () => {
+  let flagIcon: string = '';
+  beforeEach(async () => {
+    const responseUploadFlagIcon = await request(app)
+      .post(uploadFlagIconURL)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .attach('flagIcon', 'src/tests/fixtures/images/teams/england.jpg');
 
-//   test('Should not create new team missing name', async () => {
-//     const response = await request(app)
-//       .post(createTeamURL)
-//       .set('Authorization', `Bearer ${userOneToken}`)
-//       .set('Connection', 'keep-alive')
-//       .field({
-//         permalink: 'italy',
-//       })
-//       .attach('flagIcon', 'src/tests/fixtures/images/teams/england.jpg')
-//       .expect(400);
+    flagIcon = responseUploadFlagIcon.body.data.filename;
+  });
 
-//     expect(response.body.name).toBe('ValidationError');
-//     expect(response.body.errors.name.properties).toMatchObject({
-//       message: 'Path `name` is required.',
-//       type: 'required',
-//       path: 'name',
-//     });
-//   });
+  test('Should not create new team for unauthorized user', async () => {
+    await request(app)
+      .post(createTeamURL)
+      .set('Connection', 'keep-alive')
+      .send({
+        name: 'Italy',
+        permalink: 'Italy',
+        flagIcon,
+      })
+      .expect(401);
+  });
 
-//   test('Should not create new team missing permalink', async () => {
-//     const response = await request(app)
-//       .post(createTeamURL)
-//       .set('Authorization', `Bearer ${userOneToken}`)
-//       .set('Connection', 'keep-alive')
-//       .field({
-//         name: 'Italy',
-//       })
-//       .attach('flagIcon', 'src/tests/fixtures/images/teams/england.jpg')
-//       .expect(400);
+  test('Should not create new team missing name', async () => {
+    const response = await request(app)
+      .post(createTeamURL)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .send({
+        permalink: 'italy',
+        flagIcon,
+      })
+      .expect(422);
 
-//     expect(response.body.name).toBe('ValidationError');
-//     expect(response.body.errors.permalink.properties).toMatchObject({
-//       message: 'Path `permalink` is required.',
-//       type: 'required',
-//       path: 'permalink',
-//     });
-//   });
+    expect(response.body.name).toBe('ValidationError');
+    expect(response.body.data.name).toBe('Name is a required field');
+  });
 
-//   describe('Should not create new team with wrong permalink pattern', () => {
-//     test('Permalink with dash first', async () => {
-//       const dashFirstPermalink = '-abc-abc';
-//       const response = await request(app)
-//         .post(createTeamURL)
-//         .set('Authorization', `Bearer ${userOneToken}`)
-//         .set('Connection', 'keep-alive')
-//         .field({
-//           name: 'Italy',
-//           permalink: dashFirstPermalink,
-//         })
-//         .attach('flagIcon', 'src/tests/fixtures/images/teams/england.jpg')
-//         .expect(400);
+  test('Should not create new team missing permalink', async () => {
+    const response = await request(app)
+      .post(createTeamURL)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .send({
+        name: 'Italy',
+        flagIcon,
+      })
+      .expect(422);
 
-//       expect(response.body.name).toBe('ValidationError');
-//       expect(response.body.errors.permalink.properties.message).toBe(
-//         'Permalink only accepts alphanumeric and dash'
-//       );
-//     });
+    expect(response.body.name).toBe('ValidationError');
+    expect(response.body.data.permalink).toBe('Permalink is a required field');
+  });
 
-//     test('Permalink with special chars', async () => {
-//       const specialcharsPermalink = 'abc-`~!@#$%^&*()+=|}{[]';
-//       const response = await request(app)
-//         .post(createTeamURL)
-//         .set('Authorization', `Bearer ${userOneToken}`)
-//         .set('Connection', 'keep-alive')
-//         .field({
-//           name: 'Italy',
-//           permalink: specialcharsPermalink,
-//         })
-//         .attach('flagIcon', 'src/tests/fixtures/images/teams/england.jpg')
-//         .expect(400);
+  describe('Should not create new team with wrong permalink pattern', () => {
+    test('Permalink with dash first', async () => {
+      const dashFirstPermalink = '-abc-abc';
+      const response = await request(app)
+        .post(createTeamURL)
+        .set('Authorization', `Bearer ${userOneToken}`)
+        .set('Connection', 'keep-alive')
+        .send({
+          name: 'Italy',
+          permalink: dashFirstPermalink,
+          flagIcon,
+        })
+        .expect(422);
 
-//       expect(response.body.name).toBe('ValidationError');
-//       expect(response.body.errors.permalink.properties.message).toBe(
-//         'Permalink only accepts alphanumeric and dash'
-//       );
-//     });
-//   });
+      expect(response.body.name).toBe('ValidationError');
+      expect(response.body.data.permalink).toBe(
+        'Permalink only accepts alphanumeric and dash'
+      );
+    });
 
-//   describe('Should not create new team because of duplicating', () => {
-//     test('Duplicate in name', async () => {
-//       const response = await request(app)
-//         .post(createTeamURL)
-//         .set('Authorization', `Bearer ${userOneToken}`)
-//         .set('Connection', 'keep-alive')
-//         .field({
-//           name: 'England',
-//           permalink: 'something',
-//         })
-//         .attach('flagIcon', 'src/tests/fixtures/images/teams/england.jpg')
-//         .expect(400);
+    test('Permalink with special chars', async () => {
+      const specialcharsPermalink = 'abc-`~!@#$%^&*()+=|}{[]';
+      const response = await request(app)
+        .post(createTeamURL)
+        .set('Authorization', `Bearer ${userOneToken}`)
+        .set('Connection', 'keep-alive')
+        .send({
+          name: 'Italy',
+          permalink: specialcharsPermalink,
+          flagIcon,
+        })
+        .expect(422);
 
-//       expect(response.body.code).toBe(11000);
-//     });
+      expect(response.body.name).toBe('ValidationError');
+      expect(response.body.data.permalink).toBe(
+        'Permalink only accepts alphanumeric and dash'
+      );
+    });
+  });
 
-//     test('Duplicate in name', async () => {
-//       const response = await request(app)
-//         .post(createTeamURL)
-//         .set('Authorization', `Bearer ${userOneToken}`)
-//         .set('Connection', 'keep-alive')
-//         .field({
-//           name: 'something',
-//           permalink: 'england',
-//         })
-//         .attach('flagIcon', 'src/tests/fixtures/images/teams/england.jpg')
-//         .expect(400);
+  describe('Should not create new team because of duplicating', () => {
+    test('Duplicate in name', async () => {
+      const response = await request(app)
+        .post(createTeamURL)
+        .set('Authorization', `Bearer ${userOneToken}`)
+        .set('Connection', 'keep-alive')
+        .send({
+          name: 'England',
+          permalink: 'something',
+          flagIcon,
+        })
+        .expect(422);
 
-//       expect(response.body.code).toBe(11000);
-//     });
-//   });
+      expect(response.body.name).toBe('ValidationError');
+      expect(response.body.data.name).toBe('Name value is already existed');
+    });
 
-//   test('Should create a new team', async () => {
-//     const name = 'Czech Republic';
-//     const permalink = 'Czech-Republic';
+    test('Duplicate in permalink', async () => {
+      const response = await request(app)
+        .post(createTeamURL)
+        .set('Authorization', `Bearer ${userOneToken}`)
+        .set('Connection', 'keep-alive')
+        .send({
+          name: 'something',
+          permalink: 'england',
+        })
+        .expect(422);
 
-//     const response = await request(app)
-//       .post(createTeamURL)
-//       .set('Authorization', `Bearer ${userOneToken}`)
-//       .set('Connection', 'keep-alive')
-//       .field({
-//         name,
-//         permalink,
-//       })
-//       .attach('flagIcon', 'src/tests/fixtures/images/teams/england.jpg')
-//       .expect(201);
+      expect(response.body.name).toBe('ValidationError');
+      expect(response.body.data.permalink).toBe(
+        'Permalink value is already existed'
+      );
+    });
+  });
 
-//     // confirm that team has been inserted
-//     const team = await Team.findById(response.body._id);
-//     expect(team).not.toBeNull();
-//     expect(team!.nameDisplay).toBe(name.trim());
-//     expect(team!.permalink).toBe(permalink.toLowerCase());
-//     expect(team!.flagIcon).toBeTruthy();
-//   });
-// });
+  test('Should not create new team missing flagIcon', async () => {
+    const response = await request(app)
+      .post(createTeamURL)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .send({
+        name: 'Italy',
+        permalink: 'italy',
+      })
+      .expect(422);
+
+    expect(response.body.name).toBe('ValidationError');
+    expect(response.body.data.flagIcon).toBe('Flag Icon is a required field');
+  });
+
+  test('Should not create new team with not exists flagIcon filename', async () => {
+    const response = await request(app)
+      .post(createTeamURL)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .send({
+        name: 'Italy',
+        permalink: 'italy',
+        flagIcon: 'not-exists.jpg',
+      })
+      .expect(422);
+
+    expect(response.body.name).toBe('ValidationError');
+    expect(response.body.data.flagIcon).toBe('Invalid Flag Icon file path');
+  });
+
+  test('Should create a new team', async () => {
+    const name = 'Czech Republic';
+    const permalink = 'Czech-Republic';
+
+    const response = await request(app)
+      .post(createTeamURL)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .send({
+        name,
+        permalink,
+        flagIcon,
+      })
+      .expect(201);
+
+    // confirm that team has been inserted
+    const team = await Team.findById(response.body._id);
+    expect(team).not.toBeNull();
+    expect(team!.nameDisplay).toBe(name.trim());
+    expect(team!.permalink).toBe(permalink.toLowerCase());
+    expect(team!.flagIcon).toBeTruthy();
+  });
+});

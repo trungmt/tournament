@@ -20,7 +20,6 @@ export default class TeamController extends AdminAbstractController {
     const team = new Team(teamFormData);
 
     //TODO: function to prepare env const
-    //TODO: check if there are redudant inputs
     const flagIconWidth = parseInt(process.env.DEFAULT_IMAGE_WIDTH!);
     try {
       await moveUploadFile(
