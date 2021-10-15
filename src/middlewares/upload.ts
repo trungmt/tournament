@@ -104,7 +104,8 @@ export const uploadSingleFile = (
 export const resizeImage = async (
   inputFilePath: string,
   width: number,
-  outputFilePath?: string
+  outputFilePath?: string,
+  isDeleteInput: boolean = false
 ): Promise<void | Buffer> => {
   try {
     const resizedFile = sharp(inputFilePath).resize({
@@ -117,6 +118,10 @@ export const resizeImage = async (
     }
 
     await resizedFile.toFile(outputFilePath);
+
+    if (isDeleteInput === true) {
+      await unlink(inputFilePath);
+    }
     return;
   } catch (error) {
     if (error instanceof Error) {
@@ -228,10 +233,12 @@ export const moveUploadFile = async (
   try {
     await mkdir(targetDirectory, { recursive: true });
     if (resizeWidth) {
-      await resizeImage(tempFilePath, resizeWidth, targetFilePath);
-      if (isDeleteTemp === true) {
-        await unlink(tempFilePath);
-      }
+      await resizeImage(
+        tempFilePath,
+        resizeWidth,
+        targetFilePath,
+        isDeleteTemp
+      );
     } else if (isDeleteTemp === true) {
       await rename(tempFilePath, targetFilePath);
     } else {
