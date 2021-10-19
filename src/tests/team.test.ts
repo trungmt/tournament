@@ -4,7 +4,7 @@ import app from '../app';
 import { setupDatabase } from './fixtures/db';
 import { removeOldTempFiles } from '../middlewares/upload';
 import Team from '../models/team';
-import { ObjectID } from 'bson';
+import { ObjectID } from 'mongodb';
 
 // TODO: add locale files to store constants related to validation messages
 
