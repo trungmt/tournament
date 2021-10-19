@@ -35,4 +35,6 @@ teamsRouter.patch(
   Team.update
 );
 
+teamsRouter.delete('/:id', auth, Team.delete);
+
 export default teamsRouter;
