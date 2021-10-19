@@ -1,7 +1,6 @@
 import User, { IUser } from '../../models/user';
 import Team from '../../models/team';
 import { moveUploadFile } from '../../middlewares/upload';
-import path from 'path';
 
 export const userOne: IUser = {
   username: 'trungtm',
@@ -42,8 +41,8 @@ export const setupDatabase = async () => {
     const userTwoDoc = await new User(userTwo).save();
     const userTwoToken = userTwoDoc.generateAccessToken();
 
-    await new Team(teamOne).save();
-    return { userOneToken, userTwoToken };
+    const team = await new Team(teamOne).save();
+    return { userOneToken, userTwoToken, team };
   } catch (error) {
     throw new Error('no file');
   }
