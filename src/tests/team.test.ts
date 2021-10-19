@@ -1,15 +1,16 @@
 import request from 'supertest';
+import { Document } from 'mongoose';
 import app from '../app';
 import { setupDatabase } from './fixtures/db';
 import { removeOldTempFiles } from '../middlewares/upload';
 import Team from '../models/team';
+import { ObjectID } from 'mongodb';
 
 // TODO: add locale files to store constants related to validation messages
-const createTeamURL = '/api/admin/teams';
-const uploadFlagIconURL = '/api/admin/teams/upload/flagIcon';
 
 let userOneToken: string;
 let userTwoToken: string;
+let team: ITeamDoc & Document<any, any, ITeamDoc>;
 
 afterAll(async () => {
   await removeOldTempFiles(0);
@@ -19,7 +20,12 @@ beforeEach(async () => {
   const initDBResult = await setupDatabase();
   userOneToken = initDBResult.userOneToken;
   userTwoToken = initDBResult.userTwoToken;
+  team = initDBResult.team;
 });
+
+const createTeamURL = '/api/admin/teams';
+const uploadFlagIconURL = '/api/admin/teams/upload/flagIcon';
+const deleteTeamURL = '/api/admin/teams/:id';
 
 describe(`POST ${uploadFlagIconURL}`, () => {
   test('Should not upload flagIcon for unauthorized user', async () => {
@@ -273,5 +279,46 @@ describe('POST /api/admin/teams', () => {
     expect(team!.nameDisplay).toBe(name.trim());
     expect(team!.permalink).toBe(permalink.toLowerCase());
     expect(team!.flagIcon).toBeTruthy();
+  });
+});
+
+describe(`DELETE ${deleteTeamURL}`, () => {
+  let _idString: string;
+  beforeEach(() => {
+    const _id = team._id as ObjectID;
+    _idString = _id.toHexString();
+  });
+  test(`Should delete team`, async () => {
+    const url = deleteTeamURL.replace(':id', _idString);
+    console.log('url', url);
+    const response = await request(app)
+      .delete(url)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .send()
+      .expect(200);
+    expect(response.body._id).toBe(_idString);
+  });
+
+  test(`Should response not found error if delete team that doesnt exist in db`, async () => {
+    const _idString = '6166fc792d145d5b4ceb43ba'; // ObjectID from past
+    const url = deleteTeamURL.replace(':id', _idString);
+    console.log('url', url);
+    const response = await request(app)
+      .delete(url)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .send()
+      .expect(404);
+  });
+
+  test('Should not delete team for unauthorized user', async () => {
+    const url = deleteTeamURL.replace(':id', _idString);
+    console.log('url', url);
+    const response = await request(app)
+      .delete(url)
+      .set('Connection', 'keep-alive')
+      .send()
+      .expect(401);
   });
 });

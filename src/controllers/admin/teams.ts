@@ -43,21 +43,9 @@ export default class TeamController extends AdminAbstractController {
   ) => {
     const _id = req.params.id;
     const teamFormData = this.nameTransform(req.body);
-
-    const team = Team.findById(_id);
-
-    if (!team) {
-      throw new BaseError(
-        'This team does not exists. Please check again.',
-        'This team does not exists. Please check again.',
-        404,
-        false,
-        { redirect: '/api/admin/teams' }
-      );
-    }
-
     //TODO: function to prepare env const
     const flagIconWidth = parseInt(process.env.DEFAULT_IMAGE_WIDTH!);
+
     try {
       await moveUploadFile(
         process.env.ENTITY_TEAMS!,
@@ -65,12 +53,22 @@ export default class TeamController extends AdminAbstractController {
         flagIconWidth
       );
 
-      const updatedTeam = await Team.findOneAndUpdate({ _id }, teamFormData, {
+      const team = await Team.findOneAndUpdate({ _id }, teamFormData, {
         new: true,
         runValidators: true,
       });
 
-      res.status(200).send(updatedTeam);
+      if (team === null) {
+        throw new BaseError(
+          'This team does not exists. Please check again.',
+          'This team does not exists. Please check again.',
+          404,
+          false,
+          { redirect: '/api/admin/teams' }
+        );
+      }
+
+      res.status(200).send(team);
     } catch (error) {
       next(error);
     }
@@ -80,7 +78,25 @@ export default class TeamController extends AdminAbstractController {
     req: Request<ModifyFormParams, {}, ITeam>,
     res: Response,
     next: NextFunction
-  ) => {};
+  ) => {
+    const _id = req.params.id;
+    try {
+      const team = await Team.findByIdAndDelete(_id);
+
+      if (!team) {
+        throw new BaseError(
+          'This team does not exists. Please check again.',
+          'This team does not exists. Please check again.',
+          404,
+          false,
+          { redirect: '/api/admin/teams' }
+        );
+      }
+      res.status(200).send(team);
+    } catch (error) {
+      next(error);
+    }
+  };
 
   list = async (
     req: Request<{}, {}, ITeam>,
