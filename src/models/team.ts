@@ -38,6 +38,7 @@ const teamSchema = new Schema<ITeamDoc, ITeamModel, ITeamDoc>(
   },
   {
     timestamps: true,
+    strictQuery: 'throw',
   }
 );
 
