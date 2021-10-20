@@ -1,10 +1,18 @@
 import { NextFunction, Request, Response } from 'express';
 import AdminAbstractController from '../AdminAbstractController';
-import { ModifyFormParams } from '../AdminEntityControllerInterface';
+import {
+  ModifyFormParams,
+  ListQueryParams,
+} from '../AdminEntityControllerInterface';
 import Team from '../../models/team';
+import { FilterQuery } from 'mongoose';
 import { moveUploadFile } from '../../middlewares/upload';
 import { CustomResponse } from '../../services/CustomResponse';
 import BaseError from '../../exceptions/BaseError';
+
+export interface TeamsListQueryParams extends ListQueryParams {
+  name: string;
+}
 export default class TeamController extends AdminAbstractController {
   constructor(entityName: string) {
     super(entityName);
@@ -102,7 +110,9 @@ export default class TeamController extends AdminAbstractController {
     req: Request<{}, {}, ITeam>,
     res: Response,
     next: NextFunction
-  ) => {};
+  ) => {
+    const { name, limit, page } = req.query as TeamsListQueryParams;
+  };
 
   form = async (
     req: Request<ModifyFormParams, {}, ITeam>,

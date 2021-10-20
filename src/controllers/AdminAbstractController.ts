@@ -3,6 +3,7 @@ import { ParamsDictionary } from 'express-serve-static-core';
 import { ParsedQs } from 'qs';
 import AdminEntityControllerInterface, {
   ModifyFormParams,
+  ListQueryParams,
 } from './AdminEntityControllerInterface';
 
 export default abstract class AdminAbstractController
@@ -39,7 +40,7 @@ export default abstract class AdminAbstractController
     ParamsDictionary,
     any,
     any,
-    ParsedQs,
+    ListQueryParams,
     Record<string, any>
   >;
   abstract form: RequestHandler<
