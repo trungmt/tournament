@@ -5,8 +5,7 @@ import {
   ListQueryParams,
 } from '../AdminEntityControllerInterface';
 import Team from '../../models/team';
-import { FilterQuery } from 'mongoose';
-import { moveUploadFile } from '../../middlewares/upload';
+import { moveUploadFile } from '../../services/FileService';
 import { CustomResponse } from '../../services/CustomResponse';
 import BaseError from '../../exceptions/BaseError';
 

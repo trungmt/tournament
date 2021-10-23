@@ -2,7 +2,7 @@ import request from 'supertest';
 import { Document } from 'mongoose';
 import app from '../app';
 import { setupDatabase } from './fixtures/db';
-import { removeOldTempFiles } from '../middlewares/upload';
+import { removeOldTempFiles } from '../services/FileService';
 import Team from '../models/team';
 import { ObjectID } from 'mongodb';
 

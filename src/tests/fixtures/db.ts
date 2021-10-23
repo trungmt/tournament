@@ -1,6 +1,6 @@
 import User, { IUser } from '../../models/user';
 import Team from '../../models/team';
-import { moveUploadFile } from '../../middlewares/upload';
+import { moveUploadFile } from '../../services/FileService';
 
 export const userOne: IUser = {
   username: 'trungtm',
