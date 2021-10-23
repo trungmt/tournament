@@ -3,7 +3,7 @@ import cron from 'node-cron';
 import authRouter from './routers/auth/auth';
 import adminRouter from './routers/admin/admin';
 import { logException, responseException } from './middlewares/exception';
-import { removeOldTempFiles } from './middlewares/upload';
+import { removeOldTempFiles } from './services/FileService';
 require('./db/mongoose'); // move to providers/
 
 const app = express();

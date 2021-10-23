@@ -29,7 +29,7 @@ export const validationAsync =
           if (typeof err.path === 'undefined') {
             return true;
           }
-          const fieldName = getFieldNameFromPath(err.path);
+          const fieldName = getFieldNameFromYupPath(err.path);
           if (fieldName && req.errors && !req.errors[fieldName]) {
             req.errors[fieldName] = err.message;
           }
@@ -58,7 +58,9 @@ export const validationAsync =
  * @returns string in case path has form body.{form-field}, return form-field
  *                 in case path has form {form-field}, return form-field
  */
-const getFieldNameFromPath = (path: string | undefined): string | undefined => {
+const getFieldNameFromYupPath = (
+  path: string | undefined
+): string | undefined => {
   if (typeof path === 'undefined' || path === '') return undefined;
   const fieldNameArr = extname(path).split('.');
   return fieldNameArr.length === 1 ? path : fieldNameArr.pop()!;
