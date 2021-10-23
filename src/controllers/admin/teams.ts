@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import AdminAbstractController from '../AdminAbstractController';
 import { ModifyFormParams } from '../AdminEntityControllerInterface';
 import Team from '../../models/team';
-import { moveUploadFile } from '../../middlewares/upload';
+import { moveUploadFile } from '../../services/FileService';
 import { CustomResponse } from '../../services/CustomResponse';
 import BaseError from '../../exceptions/BaseError';
 export default class TeamController extends AdminAbstractController {

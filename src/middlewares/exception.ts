@@ -7,9 +7,6 @@ export const logException = (
   res: Response,
   next: NextFunction
 ) => {
-  // console.log(`Error at route ${req.route}:`);
-  // console.log(error);
-
   if (
     process.env.NODE_ENV === 'development' ||
     (process.env.NODE_ENV === 'testing' &&
