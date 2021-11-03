@@ -1,7 +1,11 @@
 import request from 'supertest';
 import { Document } from 'mongoose';
 import app from '../app';
-import { setupDatabase } from './fixtures/db';
+import {
+  setupUserDatabase,
+  setupTeamDatabase,
+  setupTeamListDatabase,
+} from './fixtures/db';
 import { removeOldTempFiles } from '../services/FileService';
 import Team from '../models/team';
 import { ObjectID } from 'mongodb';
@@ -12,20 +16,22 @@ let userOneToken: string;
 let userTwoToken: string;
 let team: ITeamDoc & Document<any, any, ITeamDoc>;
 
-afterAll(async () => {
-  await removeOldTempFiles(0);
+beforeEach(async () => {
+  const initUserDBResult = await setupUserDatabase();
+  const initTeamDBResult = await setupTeamDatabase();
+  userOneToken = initUserDBResult.userOneToken;
+  userTwoToken = initUserDBResult.userTwoToken;
+  team = initTeamDBResult.team;
 });
 
-beforeEach(async () => {
-  const initDBResult = await setupDatabase();
-  userOneToken = initDBResult.userOneToken;
-  userTwoToken = initDBResult.userTwoToken;
-  team = initDBResult.team;
+afterAll(async () => {
+  await removeOldTempFiles(0);
 });
 
 const createTeamURL = '/api/admin/teams';
 const uploadFlagIconURL = '/api/admin/teams/upload/flagIcon';
 const deleteTeamURL = '/api/admin/teams/:id';
+const listTeamURL = '/api/admin/teams';
 
 describe(`POST ${uploadFlagIconURL}`, () => {
   test('Should not upload flagIcon for unauthorized user', async () => {
