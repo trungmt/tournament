@@ -7,7 +7,7 @@ import BaseError from '../exceptions/BaseError';
 import {
   getFileTypeFromDisk,
   verifyFileExtension,
-} from '../middlewares/upload';
+} from '../services/FileService';
 interface ITeamFileForm {
   body: {
     flagIcon?: Express.Multer.File;

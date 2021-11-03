@@ -1,6 +1,6 @@
 import { Schema, model, Model } from 'mongoose';
 
-interface ITeamModel extends Model<ITeamDoc> {}
+export interface ITeamModel extends Model<ITeamDoc> {}
 
 const validatePermalinkPattern = function (permalink: string) {
   return /^([a-zA-Z0-9]+-)*[a-zA-Z0-9]+$/.test(permalink);

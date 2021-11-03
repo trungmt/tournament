@@ -1,6 +1,7 @@
 import express from 'express';
-import TeamController from '../../controllers/admin/teams';
 import auth from '../../middlewares/auth';
+import TeamController from '../../controllers/admin/teams';
+import TeamService from '../../repositories/admin/teams/TeamRepository';
 import { uploadSingleFile } from '../../middlewares/upload';
 import { validationAsync } from '../../middlewares/validation';
 import {
@@ -11,7 +12,8 @@ import {
 const teamsRouter = express.Router();
 const entityName = process.env.ENTITY_TEAMS!;
 
-const Team = new TeamController(entityName);
+const service = new TeamService();
+const Team = new TeamController(entityName, service);
 
 teamsRouter.post(
   '/upload/flagIcon',
