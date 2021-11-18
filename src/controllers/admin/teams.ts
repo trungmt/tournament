@@ -27,8 +27,6 @@ export default class TeamController extends AdminAbstractController {
   ) => {
     const teamFormData = this.nameTransform(req.body);
 
-    const team = new Team(teamFormData);
-
     //TODO: function to prepare env const
     const flagIconWidth = parseInt(process.env.DEFAULT_IMAGE_WIDTH!);
     try {
@@ -38,7 +36,7 @@ export default class TeamController extends AdminAbstractController {
         flagIconWidth
       );
 
-      await team.save();
+      const team = await this.repository.insertTeam(teamFormData);
 
       res.status(201).send(team);
     } catch (error) {
@@ -63,10 +61,7 @@ export default class TeamController extends AdminAbstractController {
         flagIconWidth
       );
 
-      const team = await Team.findOneAndUpdate({ _id }, teamFormData, {
-        new: true,
-        runValidators: true,
-      });
+      const team = await this.repository.updateTeam(_id, teamFormData);
 
       if (team === null) {
         throw new BaseError(
@@ -91,7 +86,7 @@ export default class TeamController extends AdminAbstractController {
   ) => {
     const _id = req.params.id;
     try {
-      const team = await Team.findByIdAndDelete(_id);
+      const team = await this.repository.deleteTeam(_id);
 
       if (!team) {
         throw new BaseError(

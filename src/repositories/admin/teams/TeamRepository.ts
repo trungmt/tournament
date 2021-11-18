@@ -12,15 +12,19 @@ export default class TeamRepository
   constructor(model: ITeamModel = TeamModel) {
     super(model);
   }
-  insertTeam(team: ITeamDoc): Promise<ResultType> {
-    throw new Error('Method not implemented.');
+  async insertTeam(team: ITeamDoc): Promise<ResultType> {
+    return await this.model.create(team);
   }
 
-  updateTeam(id: ObjectID, team: ITeamDoc): Promise<ResultType> {
-    throw new Error('Method not implemented.');
+  async updateTeam(_id: string, team: ITeamDoc): Promise<ResultType | null> {
+    // TODO: validate _id of type ObjectID
+    return await this.model.findOneAndUpdate({ _id }, team, {
+      new: true,
+      runValidators: true,
+    });
   }
-  deleteTeam(id: ObjectID): Promise<ResultType> {
-    throw new Error('Method not implemented.');
+  async deleteTeam(_id: string): Promise<ResultType | null> {
+    return await this.model.findByIdAndDelete(_id);
   }
   async getTeams(
     name: string = '',
