@@ -7,12 +7,7 @@ import BaseError from '../exceptions/BaseError';
 import {
   getFileTypeFromDisk,
   verifyFileExtension,
-} from '../middlewares/upload';
-interface ITeamFileForm {
-  body: {
-    flagIcon?: Express.Multer.File;
-  };
-}
+} from '../services/FileService';
 
 const flagIconFileUploadValidation: TestFunction<
   Express.Multer.File | undefined,

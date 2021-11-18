@@ -1,10 +1,10 @@
 import request from 'supertest';
-import { userOne, setupDatabase } from './fixtures/db';
+import { userOne, setupUserDatabase } from './fixtures/db';
 import app from '../app';
 
 let userOneToken: string;
 beforeEach(async () => {
-  const initDBResult = await setupDatabase();
+  const initDBResult = await setupUserDatabase();
   userOneToken = initDBResult.userOneToken;
 });
 

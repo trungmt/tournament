@@ -1,7 +1,11 @@
 import request from 'supertest';
 import { Document } from 'mongoose';
 import app from '../app';
-import { setupDatabase } from './fixtures/db';
+import {
+  setupUserDatabase,
+  setupTeamDatabase,
+  setupTeamListDatabase,
+} from './fixtures/db';
 import { removeOldTempFiles } from '../services/FileService';
 import Team from '../models/team';
 import { ObjectID } from 'mongodb';
@@ -12,20 +16,22 @@ let userOneToken: string;
 let userTwoToken: string;
 let team: ITeamDoc & Document<any, any, ITeamDoc>;
 
-afterAll(async () => {
-  await removeOldTempFiles(0);
+beforeEach(async () => {
+  const initUserDBResult = await setupUserDatabase();
+  const initTeamDBResult = await setupTeamDatabase();
+  userOneToken = initUserDBResult.userOneToken;
+  userTwoToken = initUserDBResult.userTwoToken;
+  team = initTeamDBResult.team;
 });
 
-beforeEach(async () => {
-  const initDBResult = await setupDatabase();
-  userOneToken = initDBResult.userOneToken;
-  userTwoToken = initDBResult.userTwoToken;
-  team = initDBResult.team;
+afterAll(async () => {
+  await removeOldTempFiles(0);
 });
 
 const createTeamURL = '/api/admin/teams';
 const uploadFlagIconURL = '/api/admin/teams/upload/flagIcon';
 const deleteTeamURL = '/api/admin/teams/:id';
+const listTeamURL = '/api/admin/teams';
 
 describe(`POST ${uploadFlagIconURL}`, () => {
   test('Should not upload flagIcon for unauthorized user', async () => {
@@ -320,5 +326,123 @@ describe(`DELETE ${deleteTeamURL}`, () => {
       .set('Connection', 'keep-alive')
       .send()
       .expect(401);
+  });
+});
+
+describe(`GET ${listTeamURL}`, () => {
+  let teamList: ITeamDoc[];
+  let defaultPaginLimit = parseInt(process.env.PAGINATION_DEFAULT_LIMIT!);
+  let defaultPaginPage = parseInt(process.env.PAGINATION_DEFAULT_PAGE!);
+  console.log('defaultPaginLimit', defaultPaginLimit);
+  beforeEach(async () => {
+    const initTeamListDBResult = await setupTeamListDatabase();
+    teamList = initTeamListDBResult;
+  });
+  test(`Should list first page teams in default url`, async () => {
+    const expectTeamList = teamList
+      .slice(teamList.length - defaultPaginLimit)
+      .reverse();
+    const response = await request(app)
+      .get(listTeamURL)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .send()
+      .expect(200);
+
+    const resultTeams = response.body.results as ITeamDoc[];
+
+    expect(resultTeams.length).toBe(defaultPaginLimit);
+    expect(resultTeams).toEqual(JSON.parse(JSON.stringify(expectTeamList)));
+    expect(response.body.current).toBe(defaultPaginPage);
+    expect(response.body.limit).toBe(defaultPaginLimit);
+    expect(response.body.lastPage).toBe(4);
+    expect(response.body.previous).toBeNull();
+    expect(response.body.next).toBe(2);
+  });
+
+  test(`Should list first page teams if no limit and page specified`, async () => {
+    const expectTeamList = teamList
+      .slice(teamList.length - defaultPaginLimit)
+      .reverse();
+    const response = await request(app)
+      .get(`${listTeamURL}?limit=&page=`)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .send()
+      .expect(200);
+
+    const resultTeams = response.body.results as ITeamDoc[];
+
+    expect(resultTeams.length).toBe(defaultPaginLimit);
+    expect(resultTeams).toEqual(JSON.parse(JSON.stringify(expectTeamList)));
+    expect(response.body.current).toBe(defaultPaginPage);
+    expect(response.body.limit).toBe(defaultPaginLimit);
+    expect(response.body.lastPage).toBe(4);
+    expect(response.body.previous).toBeNull();
+    expect(response.body.next).toBe(2);
+  });
+
+  test(`Should list teams with previous and next page`, async () => {
+    const limit = 2,
+      page = 3;
+    const response = await request(app)
+      .get(`${listTeamURL}?limit=${limit}&page=${page}`)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .send()
+      .expect(200);
+
+    const expectTeamList = teamList
+      .slice(teamList.length - 6, teamList.length - 4)
+      .reverse();
+    const resultTeams = response.body.results as ITeamDoc[];
+
+    expect(resultTeams.length).toBe(limit);
+    expect(resultTeams).toEqual(JSON.parse(JSON.stringify(expectTeamList)));
+    expect(response.body.current).toBe(page);
+    expect(response.body.limit).toBe(limit);
+    expect(response.body.lastPage).toBe(16);
+    expect(response.body.previous).toBe(page - 1);
+    expect(response.body.next).toBe(page + 1);
+  });
+
+  test(`Should list last page`, async () => {
+    const page = 4;
+    const response = await request(app)
+      .get(`${listTeamURL}?limit=&page=${page}`)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .send()
+      .expect(200);
+
+    const expectTeamList = teamList.slice(0, 2).reverse();
+    const resultTeams = response.body.results as ITeamDoc[];
+    expect(resultTeams.length).toBe(2);
+    expect(resultTeams).toEqual(JSON.parse(JSON.stringify(expectTeamList)));
+    expect(response.body.current).toBe(page);
+    expect(response.body.limit).toBe(defaultPaginLimit);
+    expect(response.body.lastPage).toBe(4);
+    expect(response.body.previous).toBe(page - 1);
+    expect(response.body.next).toBeNull();
+  });
+
+  test(`Should list nothing because out of page range`, async () => {
+    const page = 10;
+    const response = await request(app)
+      .get(`${listTeamURL}?limit=&page=${page}`)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .send()
+      .expect(200);
+
+    const expectTeamList = [] as ITeamDoc[];
+    const resultTeams = response.body.results as ITeamDoc[];
+    expect(resultTeams.length).toBe(0);
+    expect(resultTeams).toEqual(JSON.parse(JSON.stringify(expectTeamList)));
+    expect(response.body.current).toBeNull();
+    expect(response.body.limit).toBe(defaultPaginLimit);
+    expect(response.body.lastPage).toBe(4);
+    expect(response.body.previous).toBeNull();
+    expect(response.body.next).toBeNull();
   });
 });

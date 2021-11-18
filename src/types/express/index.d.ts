@@ -37,17 +37,4 @@ declare module 'express' {
       stack?: string
     ): this;
   }
-  interface RequestHandler<
-    P = core.ParamsDictionary,
-    ResBody = any,
-    ReqBody = any,
-    ReqQuery = core.Query,
-    Locals extends Record<string, any> = Record<string, any>
-  > extends core.RequestHandler<P, ResBody, ReqBody, ReqQuery, Locals> {
-    (
-      req: Request<P, ResBody, ReqBody, ReqQuery, Locals>,
-      res: Response<ResBody, Locals>,
-      next: NextFunction
-    ): void;
-  }
 }

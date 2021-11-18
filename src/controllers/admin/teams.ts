@@ -1,13 +1,23 @@
 import { NextFunction, Request, Response } from 'express';
 import AdminAbstractController from '../AdminAbstractController';
-import { ModifyFormParams } from '../AdminEntityControllerInterface';
+import {
+  ModifyFormParams,
+  ListQueryParams,
+} from '../AdminEntityControllerInterface';
+import TeamRepositoryInterface from '../../repositories/admin/teams/TeamRepositoryInterface';
 import Team from '../../models/team';
 import { moveUploadFile } from '../../services/FileService';
 import { CustomResponse } from '../../services/CustomResponse';
 import BaseError from '../../exceptions/BaseError';
+
+export interface TeamsListQueryParams extends ListQueryParams {
+  name: string;
+}
 export default class TeamController extends AdminAbstractController {
-  constructor(entityName: string) {
+  private repository: TeamRepositoryInterface;
+  constructor(entityName: string, repository: TeamRepositoryInterface) {
     super(entityName);
+    this.repository = repository;
   }
 
   create = async (
@@ -102,7 +112,15 @@ export default class TeamController extends AdminAbstractController {
     req: Request<{}, {}, ITeam>,
     res: Response,
     next: NextFunction
-  ) => {};
+  ) => {
+    try {
+      const { name, limit, page } = req.query as TeamsListQueryParams;
+      const list = await this.repository.getTeams(name, limit, page);
+      res.status(200).send(list);
+    } catch (error) {
+      next(error);
+    }
+  };
 
   form = async (
     req: Request<ModifyFormParams, {}, ITeam>,
