@@ -1,35 +1,40 @@
 import { ObjectID } from 'mongodb';
-import PaginationService, {
-  PaginationResult,
-} from '../../../services/PaginationService';
+import { PaginationResult } from '../../../services/PaginationService';
 import TeamModel, { ITeamModel } from '../../../models/team';
-import TeamRepositoryInterface from './TeamRepositoryInterface';
-export default class TeamRepository implements TeamRepositoryInterface {
-  private teamModel: ITeamModel;
-  constructor(teamModel: ITeamModel = TeamModel) {
-    this.teamModel = teamModel;
+import TeamRepositoryInterface, { ResultType } from './TeamRepositoryInterface';
+import Repository from '../Repository';
+import { FilterQuery } from 'mongoose';
+
+export default class TeamRepository
+  extends Repository<ITeamDoc, {}>
+  implements TeamRepositoryInterface
+{
+  constructor(model: ITeamModel = TeamModel) {
+    super(model);
   }
-  insertTeam(team: ITeamDoc): Promise<ITeamDoc> {
+  insertTeam(team: ITeamDoc): Promise<ResultType> {
     throw new Error('Method not implemented.');
   }
-  updateTeam(id: ObjectID, team: ITeamDoc): Promise<ITeamDoc> {
+
+  updateTeam(id: ObjectID, team: ITeamDoc): Promise<ResultType> {
     throw new Error('Method not implemented.');
   }
-  deleteTeam(id: ObjectID): Promise<ITeamDoc> {
+  deleteTeam(id: ObjectID): Promise<ResultType> {
     throw new Error('Method not implemented.');
   }
   async getTeams(
     name: string = '',
-    limit?: number,
-    page?: number
-  ): Promise<PaginationResult<any>> {
-    const query = this.teamModel
-      .find({ name: { $regex: '.*' + name + '.*', $options: 'i' } })
-      .sort({ createdAt: -1, _id: -1 });
+    limit?: string,
+    page?: string
+  ): Promise<PaginationResult<ResultType>> {
+    const filter: FilterQuery<ResultType> = {
+      name: { $regex: '.*' + name + '.*', $options: 'i' },
+    };
+    const sort = { createdAt: -1, _id: -1 };
 
-    return await PaginationService.doPagination(query, limit, page);
+    return await this.getListWithPagination(filter, sort, limit, page);
   }
-  getTeamById(id: ObjectID): Promise<ITeamDoc> {
-    throw new Error('Method not implemented.');
+  async getTeamById(id: ObjectID): Promise<ResultType | null> {
+    return await this.model.findById(id);
   }
 }

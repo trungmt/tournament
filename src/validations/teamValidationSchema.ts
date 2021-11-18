@@ -8,11 +8,6 @@ import {
   getFileTypeFromDisk,
   verifyFileExtension,
 } from '../services/FileService';
-interface ITeamFileForm {
-  body: {
-    flagIcon?: Express.Multer.File;
-  };
-}
 
 const flagIconFileUploadValidation: TestFunction<
   Express.Multer.File | undefined,

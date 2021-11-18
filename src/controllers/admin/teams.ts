@@ -14,10 +14,10 @@ export interface TeamsListQueryParams extends ListQueryParams {
   name: string;
 }
 export default class TeamController extends AdminAbstractController {
-  private service: TeamRepositoryInterface;
-  constructor(entityName: string, service: TeamRepositoryInterface) {
+  private repository: TeamRepositoryInterface;
+  constructor(entityName: string, repository: TeamRepositoryInterface) {
     super(entityName);
-    this.service = service;
+    this.repository = repository;
   }
 
   create = async (
@@ -115,11 +115,7 @@ export default class TeamController extends AdminAbstractController {
   ) => {
     try {
       const { name, limit, page } = req.query as TeamsListQueryParams;
-      const list = await this.service.getTeams(
-        name,
-        parseInt(limit),
-        parseInt(page)
-      );
+      const list = await this.repository.getTeams(name, limit, page);
       res.status(200).send(list);
     } catch (error) {
       next(error);
