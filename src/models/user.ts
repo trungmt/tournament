@@ -14,6 +14,11 @@ interface IRefreshToken {
   refreshToken: string;
 }
 
+// TODO: move to services/auth/
+export interface AuthResponse {
+  user: IUserDoc & Document<any, any, IUserDoc>;
+  accessToken: string;
+}
 export interface IUser extends IUserJson {
   password: string;
   refreshTokens?: IRefreshToken[];
@@ -32,7 +37,9 @@ interface IUserModel extends Model<IUserDoc> {
     password: string
   ): Promise<IUserDoc & Document<any, any, IUserDoc>>;
 
-  checkRefreshToken(refreshToken: string): Promise<string>;
+  checkRefreshToken(
+    refreshToken: string
+  ): Promise<IUserDoc & Document<any, any, IUserDoc>>;
 }
 
 const generateToken = (
@@ -112,12 +119,11 @@ userSchema.statics.checkLogin = async (
 
 userSchema.statics.checkRefreshToken = async (
   refreshToken: string
-): Promise<string> => {
+): Promise<IUserDoc & Document<any, any, IUserDoc>> => {
   const userJSON = jwt.verify(
     refreshToken,
     process.env.REFRESH_TOKEN_SECRET!
   ) as IUserJson;
-
   if (!userJSON.username) {
     throw new Error('Unable to refresh accessToken');
   }
@@ -131,7 +137,7 @@ userSchema.statics.checkRefreshToken = async (
     throw new Error('Unable to refresh accessToken');
   }
 
-  return user!.generateAccessToken();
+  return user;
 };
 
 // -- END schema static methods --
