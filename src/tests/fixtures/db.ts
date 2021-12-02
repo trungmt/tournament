@@ -46,6 +46,8 @@ export const setupTeamDatabase = async () => {
     const teamOne: ITeamDoc = {
       name: 'england',
       nameDisplay: 'England',
+      shortName: 'eng',
+      shortNameDisplay: 'ENG',
       permalink: 'england',
       flagIcon: targetFilePath,
     };
@@ -74,6 +76,8 @@ export const setupTeamListDatabase = async () => {
     for (let index = 1; index < 33; index++) {
       teamList.push({
         name: `${index}`,
+        shortName: `${index}`,
+        shortNameDisplay: `${index}`,
         nameDisplay: `${index}`,
         permalink: `${index}`,
         flagIcon: targetFilePath,

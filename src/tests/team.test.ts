@@ -128,33 +128,19 @@ describe('POST /api/admin/teams', () => {
       .expect(401);
   });
 
-  test('Should not create new team missing name', async () => {
+  test('Should not create new team missing name, permalink, shortName', async () => {
     const response = await request(app)
       .post(createTeamURL)
       .set('Authorization', `Bearer ${userOneToken}`)
       .set('Connection', 'keep-alive')
       .send({
-        permalink: 'italy',
         flagIcon,
       })
       .expect(422);
 
     expect(response.body.name).toBe('ValidationError');
     expect(response.body.data.name).toBe('Name is a required field');
-  });
-
-  test('Should not create new team missing permalink', async () => {
-    const response = await request(app)
-      .post(createTeamURL)
-      .set('Authorization', `Bearer ${userOneToken}`)
-      .set('Connection', 'keep-alive')
-      .send({
-        name: 'Italy',
-        flagIcon,
-      })
-      .expect(422);
-
-    expect(response.body.name).toBe('ValidationError');
+    expect(response.body.data.shortName).toBe('Short Name is a required field');
     expect(response.body.data.permalink).toBe('Permalink is a required field');
   });
 
@@ -266,6 +252,7 @@ describe('POST /api/admin/teams', () => {
 
   test('Should create a new team', async () => {
     const name = 'Czech Republic';
+    const shortName = 'CZE';
     const permalink = 'Czech-Republic';
 
     const response = await request(app)
@@ -274,6 +261,7 @@ describe('POST /api/admin/teams', () => {
       .set('Connection', 'keep-alive')
       .send({
         name,
+        shortName,
         permalink,
         flagIcon,
       })
@@ -283,6 +271,7 @@ describe('POST /api/admin/teams', () => {
     const team = await Team.findById(response.body._id);
     expect(team).not.toBeNull();
     expect(team!.nameDisplay).toBe(name.trim());
+    expect(team!.shortName).toBe(shortName.toLowerCase());
     expect(team!.permalink).toBe(permalink.toLowerCase());
     expect(team!.flagIcon).toBeTruthy();
   });
@@ -296,7 +285,6 @@ describe(`DELETE ${deleteTeamURL}`, () => {
   });
   test(`Should delete team`, async () => {
     const url = deleteTeamURL.replace(':id', _idString);
-    console.log('url', url);
     const response = await request(app)
       .delete(url)
       .set('Authorization', `Bearer ${userOneToken}`)
@@ -309,7 +297,6 @@ describe(`DELETE ${deleteTeamURL}`, () => {
   test(`Should response not found error if delete team that doesnt exist in db`, async () => {
     const _idString = '6166fc792d145d5b4ceb43ba'; // ObjectID from past
     const url = deleteTeamURL.replace(':id', _idString);
-    console.log('url', url);
     const response = await request(app)
       .delete(url)
       .set('Authorization', `Bearer ${userOneToken}`)
@@ -320,7 +307,6 @@ describe(`DELETE ${deleteTeamURL}`, () => {
 
   test('Should not delete team for unauthorized user', async () => {
     const url = deleteTeamURL.replace(':id', _idString);
-    console.log('url', url);
     const response = await request(app)
       .delete(url)
       .set('Connection', 'keep-alive')
