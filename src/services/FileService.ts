@@ -85,11 +85,11 @@ export const removeOldTempFiles = async (
         const filePath = path.join(dirname, dirent.name);
 
         // wont touch ignore files
-        console.log('ignoreFileNames', ignoreFileNames);
-        console.log(
-          'ignoreFileNames.includes(dirent.name)',
-          ignoreFileNames.includes(dirent.name)
-        );
+        // console.log('ignoreFileNames', ignoreFileNames);
+        // console.log(
+        //   'ignoreFileNames.includes(dirent.name)',
+        //   ignoreFileNames.includes(dirent.name)
+        // );
 
         if (
           typeof ignoreFileNames !== 'undefined' &&

@@ -1,10 +1,12 @@
 interface ITeam {
   name: string;
+  shortName: string;
   permalink: string;
   flagIcon: string;
 }
 interface ITeamDoc extends ITeam {
   nameDisplay: string;
+  shortNameDisplay: string;
 }
 
 interface IGroup {

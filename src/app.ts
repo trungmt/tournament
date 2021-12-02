@@ -15,7 +15,6 @@ const app = express();
 // same as https://github.com/GeekyAnts/express-typescript/blob/7bb6ac09ca0270cb82a1730d9bb8d6efb89c999e/src/middlewares/Kernel.ts
 
 var dir = path.join(__dirname, '../uploads');
-console.log('dir', dir);
 
 app.use(express.static(dir));
 const corsConfig = {

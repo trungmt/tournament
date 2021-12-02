@@ -166,6 +166,51 @@ const duplicateNameValidation: TestFunction<
   return true;
 };
 
+const duplicateShortNameValidation: TestFunction<
+  string | undefined,
+  Record<string, any>
+> = async function (this, shortName) {
+  if (typeof shortName === 'undefined') {
+    return true;
+  }
+
+  let team: (ITeamDoc & Document<any, any, ITeamDoc>) | null;
+  try {
+    // prepare filter, find an existing team that has same name
+    let filter: FilterQuery<ITeamDoc> = { shortName: shortName.toLowerCase() };
+
+    // in case edit team, try to find existing team that has same name
+    // and not current edited team
+    const _id = this.options.context?._id;
+    if (typeof _id !== 'undefined') {
+      filter._id = { $ne: _id };
+    }
+
+    team = await Team.findOne(filter);
+  } catch (error) {
+    // handle system error
+    const systemError = new BaseError(
+      `Error occurs when validate shortName`,
+      '',
+      500,
+      false
+    );
+
+    const nextFunc = this.options.context?.next;
+    if (typeof nextFunc !== 'undefined') {
+      nextFunc(systemError);
+    }
+    return false;
+  }
+
+  // if there is existing team with same name, return validation error
+  if (team) {
+    return false;
+  }
+
+  return true;
+};
+
 // NOTE:(message function - https://github.com/sideway/joi/blob/83092836583a7f4ce16cbf116b8776737e80d16f/test/base.js#L1920)
 export const teamFieldValidationSchema: SchemaOf<ITeamBodyForm> = object({
   body: object({
@@ -176,6 +221,14 @@ export const teamFieldValidationSchema: SchemaOf<ITeamBodyForm> = object({
         'duplicateNameValidation',
         '${label} value is already existed',
         duplicateNameValidation
+      ),
+    shortName: string()
+      .required()
+      .label('Short Name')
+      .test(
+        'duplicateShortNameValidation',
+        '${label} value is already existed',
+        duplicateShortNameValidation
       ),
     permalink: string()
       .required()

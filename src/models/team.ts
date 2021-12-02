@@ -1,4 +1,5 @@
 import { Schema, model, Model } from 'mongoose';
+import { ObjectID } from 'mongodb';
 
 export interface ITeamModel extends Model<ITeamDoc> {}
 
@@ -15,6 +16,16 @@ const teamSchema = new Schema<ITeamDoc, ITeamModel, ITeamDoc>(
       unique: true,
     },
     nameDisplay: {
+      type: String,
+      required: true,
+    },
+    shortName: {
+      type: String,
+      required: true,
+      trim: true,
+      unique: true,
+    },
+    shortNameDisplay: {
       type: String,
       required: true,
     },
@@ -41,6 +52,20 @@ const teamSchema = new Schema<ITeamDoc, ITeamModel, ITeamDoc>(
     strictQuery: 'throw',
   }
 );
+
+// -- schema document methods --
+teamSchema.methods.toJSON = function (): ITeam & { _id: ObjectID } {
+  // TODO: write a plugin to reduce values should be shown when call toJSON
+  const userObject = this.toObject();
+
+  return {
+    _id: userObject._id,
+    name: userObject.nameDisplay,
+    shortName: userObject.shortName,
+    permalink: userObject.permalink,
+    flagIcon: userObject.flagIcon,
+  };
+};
 
 const TeamModel = model<ITeamDoc, ITeamModel>('Team', teamSchema);
 

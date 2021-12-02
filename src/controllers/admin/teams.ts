@@ -140,6 +140,8 @@ export default class TeamController extends AdminAbstractController {
   nameTransform = (teamFormData: ITeamDoc) => {
     teamFormData.nameDisplay = teamFormData.name;
     teamFormData.name = teamFormData.name.toLowerCase();
+    teamFormData.shortNameDisplay = teamFormData.shortName;
+    teamFormData.shortName = teamFormData.shortName.toLowerCase();
 
     return teamFormData;
   };
