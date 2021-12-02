@@ -61,7 +61,7 @@ teamSchema.methods.toJSON = function (): ITeam & { _id: ObjectID } {
   return {
     _id: userObject._id,
     name: userObject.nameDisplay,
-    shortName: userObject.shortName,
+    shortName: userObject.shortNameDisplay,
     permalink: userObject.permalink,
     flagIcon: userObject.flagIcon,
   };
