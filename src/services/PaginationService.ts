@@ -1,5 +1,6 @@
 export interface PaginationResult<T = any> {
   results: T[];
+  count: number;
   current: number | null;
   lastPage: number;
   limit: number;
@@ -81,6 +82,7 @@ export default class PaginationService {
     const next = page < lastPage ? page + 1 : null;
     return {
       results: data,
+      count,
       current,
       lastPage,
       limit,
