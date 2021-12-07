@@ -27,12 +27,12 @@ export default class TeamRepository
     return await this.model.findByIdAndDelete(_id);
   }
   async getTeams(
-    name: string = '',
+    query: string = '',
     limit?: string,
     page?: string
   ): Promise<PaginationResult<ResultType>> {
     const filter: FilterQuery<ResultType> = {
-      name: { $regex: '.*' + name + '.*', $options: 'i' },
+      name: { $regex: '.*' + query + '.*', $options: 'i' },
     };
     const sort = { createdAt: -1, _id: -1 };
 
