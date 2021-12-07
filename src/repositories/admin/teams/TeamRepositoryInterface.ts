@@ -8,7 +8,7 @@ export default interface ITeamsRepository {
   updateTeam(_id: string, team: ITeamDoc): Promise<ResultType | null>;
   deleteTeam(_id: string): Promise<ResultType | null>;
   getTeams(
-    name: string,
+    query: string,
     limit: string,
     page: string
   ): Promise<PaginationResult<ResultType>>;

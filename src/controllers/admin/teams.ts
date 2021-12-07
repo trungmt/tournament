@@ -11,7 +11,7 @@ import { CustomResponse } from '../../services/CustomResponse';
 import BaseError from '../../exceptions/BaseError';
 
 export interface TeamsListQueryParams extends ListQueryParams {
-  name: string;
+  query: string;
 }
 export default class TeamController extends AdminAbstractController {
   private repository: TeamRepositoryInterface;
@@ -109,8 +109,8 @@ export default class TeamController extends AdminAbstractController {
     next: NextFunction
   ) => {
     try {
-      const { name, limit, page } = req.query as TeamsListQueryParams;
-      const list = await this.repository.getTeams(name, limit, page);
+      const { query, limit, page } = req.query as TeamsListQueryParams;
+      const list = await this.repository.getTeams(query, limit, page);
       res.status(200).send(list);
     } catch (error) {
       next(error);
