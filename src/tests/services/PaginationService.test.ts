@@ -79,10 +79,12 @@ describe('paginate', () => {
 
   test('Should return first page with undefined limit, page', () => {
     const paginationService = new PaginationService();
-    const sut = paginationService.paginate(data, 32);
+    const count = 32;
+    const sut = paginationService.paginate(data, count);
 
     const expectResult = {
       results: data,
+      count,
       current: 1,
       lastPage: 4,
       limit: defaultPaginLimit,
@@ -94,10 +96,12 @@ describe('paginate', () => {
 
   test('Should list teams with previous and next page', () => {
     const paginationService = new PaginationService(5, 2);
-    const sut = paginationService.paginate(data, 32);
+    const count = 32;
+    const sut = paginationService.paginate(data, count);
 
     const expectResult = {
       results: data,
+      count,
       current: 2,
       lastPage: 7,
       limit: 5,
@@ -109,10 +113,12 @@ describe('paginate', () => {
 
   test('Should list last page', () => {
     const paginationService = new PaginationService(5, 7);
-    const sut = paginationService.paginate(data, 32);
+    const count = 32;
+    const sut = paginationService.paginate(data, count);
 
     const expectResult = {
       results: data,
+      count,
       current: 7,
       lastPage: 7,
       limit: 5,
@@ -124,10 +130,12 @@ describe('paginate', () => {
 
   test('Should list nothing because out of page range', () => {
     const paginationService = new PaginationService(10, 5);
-    const sut = paginationService.paginate(data, 32);
+    const count = 32;
+    const sut = paginationService.paginate(data, count);
 
     const expectResult = {
       results: data,
+      count,
       current: null,
       lastPage: 4,
       limit: 10,
