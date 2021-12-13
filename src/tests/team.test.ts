@@ -27,11 +27,12 @@ beforeEach(async () => {
 afterAll(async () => {
   await removeOldTempFiles(0);
 });
-
-const createTeamURL = '/api/admin/teams';
-const uploadFlagIconURL = '/api/admin/teams/upload/flagIcon';
-const deleteTeamURL = '/api/admin/teams/:id';
-const listTeamURL = '/api/admin/teams';
+const basicAPIURL = '/api/v1';
+const adminAPIURL = `${basicAPIURL}/admin`;
+const createTeamURL = `${adminAPIURL}/teams`;
+const uploadFlagIconURL = `${adminAPIURL}/teams/upload/flagIcon`;
+const deleteTeamURL = `${adminAPIURL}/teams/:id`;
+const listTeamURL = `${adminAPIURL}/teams`;
 
 describe(`POST ${uploadFlagIconURL}`, () => {
   test('Should not upload flagIcon for unauthorized user', async () => {

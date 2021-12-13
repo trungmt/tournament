@@ -50,8 +50,10 @@ app.use(
 app.use(cors(corsConfig));
 app.use(cookieParser());
 
-app.use('/auth', authRouter);
-app.use('/api/admin', adminRouter);
+const basicAPIURL = '/api/v1';
+
+app.use(`${basicAPIURL}/auth`, authRouter);
+app.use(`${basicAPIURL}/admin`, adminRouter);
 
 app.get('/', (req, res) => {
   res.send('Welcome to Euro 2020 portal');
