@@ -38,7 +38,7 @@ const teamSchema = new Schema<ITeamDoc, ITeamModel, ITeamDoc>(
       validate: [
         {
           validator: validatePermalinkPattern,
-          message: 'Permalink only accepts alphanumeric and dash',
+          message: 'Permalink only accepts alphanumeric connected by dash',
         },
       ],
     },

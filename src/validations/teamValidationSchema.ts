@@ -234,7 +234,7 @@ export const teamFieldValidationSchema: SchemaOf<ITeamBodyForm> = object({
       .required()
       .matches(
         /^([a-zA-Z0-9]+-)*[a-zA-Z0-9]+$/,
-        '${label} only accepts alphanumeric and dash'
+        '${label} only accepts alphanumeric connected by dash'
       )
       .lowercase()
       .label('Permalink')
