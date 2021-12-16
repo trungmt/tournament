@@ -1,8 +1,8 @@
 import { ObjectID } from 'mongodb';
-import { Document, EnforceDocument } from 'mongoose';
+import { Document, HydratedDocument } from 'mongoose';
 import { PaginationResult } from '../../../services/PaginationService';
 
-export type ResultType = EnforceDocument<ITeamDoc, {}>;
+export type ResultType = HydratedDocument<ITeamDoc, {}>;
 export default interface ITeamsRepository {
   insertTeam(team: ITeamDoc): Promise<ResultType | null>;
   updateTeam(_id: string, team: ITeamDoc): Promise<ResultType | null>;

@@ -161,7 +161,7 @@ describe('POST /api/admin/teams', () => {
 
       expect(response.body.name).toBe('ValidationError');
       expect(response.body.data.permalink).toBe(
-        'Permalink only accepts alphanumeric and dash'
+        'Permalink only accepts alphanumeric connected by dash'
       );
     });
 
@@ -180,7 +180,7 @@ describe('POST /api/admin/teams', () => {
 
       expect(response.body.name).toBe('ValidationError');
       expect(response.body.data.permalink).toBe(
-        'Permalink only accepts alphanumeric and dash'
+        'Permalink only accepts alphanumeric connected by dash'
       );
     });
   });
