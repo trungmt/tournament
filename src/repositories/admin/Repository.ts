@@ -1,4 +1,4 @@
-import { EnforceDocument, FilterQuery, Model } from 'mongoose';
+import { HydratedDocument, FilterQuery, Model } from 'mongoose';
 import PaginationService, {
   PaginationResult,
 } from '../../services/PaginationService';
@@ -21,7 +21,7 @@ export default class Repository<T extends IDoc, TM extends {}> {
     sortOption: string | any,
     limit?: number | string,
     page?: number | string
-  ): Promise<PaginationResult<EnforceDocument<T, TM>>> => {
+  ): Promise<PaginationResult<HydratedDocument<T, TM>>> => {
     const paginationService = new PaginationService(limit, page);
 
     const query = this._model.find(findOption).sort(sortOption);
