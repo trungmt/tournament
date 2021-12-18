@@ -38,7 +38,11 @@ export default class TeamRepository
 
     return await this.getListWithPagination(filter, sort, limit, page);
   }
-  async getTeamById(id: ObjectID): Promise<ResultType | null> {
-    return await this.model.findById(id);
+  async getTeamById(_id: string): Promise<ResultType | null> {
+    const isValidId = ObjectID.isValid(_id);
+    if (isValidId === false) {
+      return null;
+    }
+    return await this.model.findById(_id);
   }
 }

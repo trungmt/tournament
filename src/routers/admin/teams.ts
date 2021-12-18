@@ -41,4 +41,6 @@ teamsRouter.delete('/:id', auth, Team.delete);
 
 teamsRouter.get('/', auth, Team.list);
 
+teamsRouter.get('/:id', auth, Team.detail);
+
 export default teamsRouter;

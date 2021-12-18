@@ -121,7 +121,25 @@ export default class TeamController extends AdminAbstractController {
     req: Request<DetailFormParams, {}, ITeam>,
     res: Response,
     next: NextFunction
-  ) => {};
+  ) => {
+    const _id = req.params.id;
+    try {
+      const team = await this.repository.getTeamById(_id);
+
+      if (!team) {
+        throw new BaseError(
+          'This team does not exists. Please check again.',
+          'This team does not exists. Please check again.',
+          404,
+          false,
+          { redirect: '/api/admin/teams' }
+        );
+      }
+      res.status(200).send(team);
+    } catch (error) {
+      next(error);
+    }
+  };
 
   uploadFlagIcon = (req: Request, res: Response) => {
     const filename = req.file?.filename;
