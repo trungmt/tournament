@@ -17,13 +17,20 @@ export default class TeamRepository
   }
 
   async updateTeam(_id: string, team: ITeamDoc): Promise<ResultType | null> {
-    // TODO: validate _id of type ObjectID
+    const isValidId = ObjectID.isValid(_id);
+    if (isValidId === false) {
+      return null;
+    }
     return await this.model.findOneAndUpdate({ _id }, team, {
       new: true,
       runValidators: true,
     });
   }
   async deleteTeam(_id: string): Promise<ResultType | null> {
+    const isValidId = ObjectID.isValid(_id);
+    if (isValidId === false) {
+      return null;
+    }
     return await this.model.findByIdAndDelete(_id);
   }
   async getTeams(
