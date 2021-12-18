@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import AdminAbstractController from '../AdminAbstractController';
 import {
-  ModifyFormParams,
+  DetailFormParams,
   ListQueryParams,
 } from '../AdminEntityControllerInterface';
 import TeamRepositoryInterface from '../../repositories/admin/teams/TeamRepositoryInterface';
@@ -45,7 +45,7 @@ export default class TeamController extends AdminAbstractController {
   };
 
   update = async (
-    req: Request<ModifyFormParams, {}, ITeamDoc>,
+    req: Request<DetailFormParams, {}, ITeamDoc>,
     res: Response,
     next: NextFunction
   ) => {
@@ -80,7 +80,7 @@ export default class TeamController extends AdminAbstractController {
   };
 
   delete = async (
-    req: Request<ModifyFormParams, {}, ITeam>,
+    req: Request<DetailFormParams, {}, ITeam>,
     res: Response,
     next: NextFunction
   ) => {
@@ -117,8 +117,8 @@ export default class TeamController extends AdminAbstractController {
     }
   };
 
-  form = async (
-    req: Request<ModifyFormParams, {}, ITeam>,
+  detail = async (
+    req: Request<DetailFormParams, {}, ITeam>,
     res: Response,
     next: NextFunction
   ) => {};
