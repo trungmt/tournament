@@ -20,16 +20,26 @@ export default class TeamController extends AdminAbstractController {
   }
 
   create = async (
-    req: Request<{}, {}, ITeamDoc>,
+    req: Request<{}, {}, ITeamForm>,
     res: Response,
     next: NextFunction
   ) => {
-    const teamFormData = this.nameTransform(req.body);
-
     //TODO: function to prepare env const
+    const { name, shortName, permalink, flagIconAdd, flagIconDelete } =
+      req.body;
+    const teamData: ITeamDoc = {
+      name,
+      nameDisplay: name,
+      shortName,
+      shortNameDisplay: shortName,
+      permalink,
+      flagIcon: flagIconAdd,
+    };
+
+    const teamFormData = this.nameTransform(teamData);
     const flagIconWidth = parseInt(process.env.DEFAULT_IMAGE_WIDTH!);
     try {
-      await moveUploadFile(this.entityName, req.body.flagIcon, flagIconWidth);
+      await moveUploadFile(this.entityName, flagIconAdd, flagIconWidth);
 
       const team = await this.repository.insertTeam(teamFormData);
 
