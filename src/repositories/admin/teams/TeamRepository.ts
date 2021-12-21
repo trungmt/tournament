@@ -1,7 +1,7 @@
 import { ObjectID } from 'mongodb';
 import { PaginationResult } from '../../../services/PaginationService';
 import TeamModel, { ITeamModel } from '../../../models/team';
-import TeamRepositoryInterface, { ResultType } from './TeamRepositoryInterface';
+import TeamRepositoryInterface from './TeamRepositoryInterface';
 import Repository from '../Repository';
 import { FilterQuery } from 'mongoose';
 
@@ -12,17 +12,20 @@ export default class TeamRepository
   constructor(model: ITeamModel = TeamModel) {
     super(model);
   }
-  async insertTeam(team: ITeamDoc): Promise<ResultType> {
+  async insertTeam(team: ITeamDoc): Promise<RepositoryResultType<ITeamDoc>> {
     return await this.model.create(team);
   }
 
-  async updateTeam(_id: string, team: ITeamDoc): Promise<ResultType | null> {
+  async updateTeam(
+    _id: string,
+    team: ITeamDoc
+  ): Promise<RepositoryResultType<ITeamDoc> | null> {
     const isValidId = ObjectID.isValid(_id);
     if (isValidId === false) {
       return null;
     }
 
-    let oldTeam: ResultType | null = null;
+    let oldTeam: RepositoryResultType<ITeamDoc> | null = null;
     if (team.flagIcon === '') {
       oldTeam = await this.model.findById(_id);
       if (oldTeam === null) {
@@ -37,7 +40,9 @@ export default class TeamRepository
 
     return oldTeam;
   }
-  async deleteTeam(_id: string): Promise<ResultType | null> {
+  async deleteTeam(
+    _id: string
+  ): Promise<RepositoryResultType<ITeamDoc> | null> {
     const isValidId = ObjectID.isValid(_id);
     if (isValidId === false) {
       return null;
@@ -48,15 +53,17 @@ export default class TeamRepository
     query: string = '',
     limit?: string,
     page?: string
-  ): Promise<PaginationResult<ResultType>> {
-    const filter: FilterQuery<ResultType> = {
+  ): Promise<PaginationResult<RepositoryResultType<ITeamDoc>>> {
+    const filter: FilterQuery<RepositoryResultType<ITeamDoc>> = {
       name: { $regex: '.*' + query + '.*', $options: 'i' },
     };
     const sort = { createdAt: -1, _id: -1 };
 
     return await this.getListWithPagination(filter, sort, limit, page);
   }
-  async getTeamById(_id: string): Promise<ResultType | null> {
+  async getTeamById(
+    _id: string
+  ): Promise<RepositoryResultType<ITeamDoc> | null> {
     const isValidId = ObjectID.isValid(_id);
     if (isValidId === false) {
       return null;

@@ -1,11 +1,8 @@
 import { Schema, model, Model } from 'mongoose';
 import { ObjectID } from 'mongodb';
+import { validatePermalinkPattern } from '../services/ValidationService';
 
 export interface ITeamModel extends Model<ITeamDoc> {}
-
-const validatePermalinkPattern = function (permalink: string) {
-  return /^([a-zA-Z0-9]+-)*[a-zA-Z0-9]+$/.test(permalink);
-};
 
 const teamSchema = new Schema<ITeamDoc, ITeamModel, ITeamDoc>(
   {
@@ -56,14 +53,14 @@ const teamSchema = new Schema<ITeamDoc, ITeamModel, ITeamDoc>(
 // -- schema document methods --
 teamSchema.methods.toJSON = function (): ITeam & { _id: ObjectID } {
   // TODO: write a plugin to reduce values should be shown when call toJSON
-  const userObject = this.toObject();
+  const teamObject = this.toObject();
 
   return {
-    _id: userObject._id,
-    name: userObject.nameDisplay,
-    shortName: userObject.shortNameDisplay,
-    permalink: userObject.permalink,
-    flagIcon: userObject.flagIcon,
+    _id: teamObject._id,
+    name: teamObject.nameDisplay,
+    shortName: teamObject.shortNameDisplay,
+    permalink: teamObject.permalink,
+    flagIcon: teamObject.flagIcon,
   };
 };
 
