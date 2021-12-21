@@ -7,7 +7,7 @@ enum StageType {
 enum RoundRobinType {
   Once = 1,
   Twice = 2,
-  Thribe = 3,
+  Thrice = 3,
 }
 
 interface ITournament {
@@ -20,11 +20,15 @@ interface ITournament {
   groupStageRoundRobinType: RoundRobinType | null;
   finalStageType: StageType;
   finalStageRoundRobinType: RoundRobinType;
-  finalStageSingleBronzeEnable: boolean;
+  finalStageSingleBronzeEnable: boolean | null;
 }
 
 interface ITournamentDoc extends ITournament {
   nameDisplay: string;
+}
+
+interface ITournamentBodyForm {
+  body: ITournament;
 }
 
 interface ITeam {

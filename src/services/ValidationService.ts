@@ -12,5 +12,8 @@ export const isStageTypeRoundRobin = (type: StageType | null): boolean =>
 export const isStageTypeSingle = (type: StageType | null): boolean =>
   type === StageType.SingleElimination;
 
+export const isStageTypeDouble = (type: StageType | null): boolean =>
+  type === StageType.DoubleElimination;
+
 export const getStageTypeValidationMessage = (label: string): string =>
   `${label} have to be one of these types: ${Object.keys(StageType).join(',')}`;
