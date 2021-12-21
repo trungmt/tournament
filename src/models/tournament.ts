@@ -127,9 +127,9 @@ tournamentSchema.methods.toJSON = function (): ITournament & { _id: ObjectID } {
   };
 };
 
-const TeamModel = model<ITournamentDoc, ITournamentModel>(
-  'Team',
+const TournamentModel = model<ITournamentDoc, ITournamentModel>(
+  'Tournament',
   tournamentSchema
 );
 
-export default TeamModel;
+export default TournamentModel;
