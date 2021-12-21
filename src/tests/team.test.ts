@@ -29,8 +29,9 @@ afterAll(async () => {
 });
 const basicAPIURL = '/api/v1';
 const adminAPIURL = `${basicAPIURL}/admin`;
-const createTeamURL = `${adminAPIURL}/teams`;
 const uploadFlagIconURL = `${adminAPIURL}/teams/upload/flagIcon`;
+const createTeamURL = `${adminAPIURL}/teams`;
+const updateTeamURL = `${adminAPIURL}/teams/:id`;
 const deleteTeamURL = `${adminAPIURL}/teams/:id`;
 const listTeamURL = `${adminAPIURL}/teams`;
 
@@ -106,7 +107,7 @@ describe(`POST ${uploadFlagIconURL}`, () => {
 });
 
 describe('POST /api/admin/teams', () => {
-  let flagIcon: string = '';
+  let flagIconAdd: string = '';
   beforeEach(async () => {
     const responseUploadFlagIcon = await request(app)
       .post(uploadFlagIconURL)
@@ -114,7 +115,7 @@ describe('POST /api/admin/teams', () => {
       .set('Connection', 'keep-alive')
       .attach('flagIcon', 'src/tests/fixtures/images/teams/england.jpg');
 
-    flagIcon = responseUploadFlagIcon.body.data.filename;
+    flagIconAdd = responseUploadFlagIcon.body.data.filename;
   });
 
   test('Should not create new team for unauthorized user', async () => {
@@ -124,7 +125,7 @@ describe('POST /api/admin/teams', () => {
       .send({
         name: 'Italy',
         permalink: 'Italy',
-        flagIcon,
+        flagIconAdd,
       })
       .expect(401);
   });
@@ -135,7 +136,7 @@ describe('POST /api/admin/teams', () => {
       .set('Authorization', `Bearer ${userOneToken}`)
       .set('Connection', 'keep-alive')
       .send({
-        flagIcon,
+        flagIconAdd,
       })
       .expect(422);
 
@@ -155,7 +156,7 @@ describe('POST /api/admin/teams', () => {
         .send({
           name: 'Italy',
           permalink: dashFirstPermalink,
-          flagIcon,
+          flagIconAdd,
         })
         .expect(422);
 
@@ -174,7 +175,7 @@ describe('POST /api/admin/teams', () => {
         .send({
           name: 'Italy',
           permalink: specialcharsPermalink,
-          flagIcon,
+          flagIconAdd,
         })
         .expect(422);
 
@@ -194,7 +195,7 @@ describe('POST /api/admin/teams', () => {
         .send({
           name: 'England',
           permalink: 'something',
-          flagIcon,
+          flagIconAdd,
         })
         .expect(422);
 
@@ -232,7 +233,9 @@ describe('POST /api/admin/teams', () => {
       .expect(422);
 
     expect(response.body.name).toBe('ValidationError');
-    expect(response.body.data.flagIcon).toBe('Flag Icon is a required field');
+    expect(response.body.data.flagIconAdd).toBe(
+      'Flag Icon is a required field'
+    );
   });
 
   test('Should not create new team with not exists flagIcon filename', async () => {
@@ -243,12 +246,12 @@ describe('POST /api/admin/teams', () => {
       .send({
         name: 'Italy',
         permalink: 'italy',
-        flagIcon: 'not-exists.jpg',
+        flagIconAdd: 'not-exists.jpg',
       })
       .expect(422);
 
     expect(response.body.name).toBe('ValidationError');
-    expect(response.body.data.flagIcon).toBe('Invalid Flag Icon file path');
+    expect(response.body.data.flagIconAdd).toBe('Invalid Flag Icon file path');
   });
 
   test('Should create a new team', async () => {
@@ -264,7 +267,7 @@ describe('POST /api/admin/teams', () => {
         name,
         shortName,
         permalink,
-        flagIcon,
+        flagIconAdd,
       })
       .expect(201);
 
