@@ -94,7 +94,39 @@ const tournamentSchema = new Schema<
   },
 });
 
-// tournamentSchema.path('groupStageGroupSize').required(function() { return this.})
+// -- schema document methods --
+tournamentSchema.methods.toJSON = function (): ITournament & { _id: ObjectID } {
+  // TODO: write a plugin to reduce values should be shown when call toJSON
+  const tournamentObject = this.toObject();
+  const {
+    _id,
+    name,
+    permalink,
+    groupStageEnable,
+    groupStageType,
+    groupStageGroupSize,
+    groupStageGroupAdvancedSize,
+    groupStageRoundRobinType,
+    finalStageType,
+    finalStageSingleBronzeEnable,
+    finalStageRoundRobinType,
+  } = tournamentObject;
+
+  return {
+    _id,
+    name,
+    permalink,
+    groupStageEnable,
+    groupStageType,
+    groupStageGroupSize,
+    groupStageGroupAdvancedSize,
+    groupStageRoundRobinType,
+    finalStageType,
+    finalStageSingleBronzeEnable,
+    finalStageRoundRobinType,
+  };
+};
+
 const TeamModel = model<ITournamentDoc, ITournamentModel>(
   'Team',
   tournamentSchema
