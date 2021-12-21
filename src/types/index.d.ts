@@ -62,3 +62,8 @@ interface ITeamFileForm {
 }
 
 type IDoc = ITournamentDoc | IGroupDoc | ITeamDoc;
+
+type RepositoryResultType<T extends IDoc> = import('mongoose').HydratedDocument<
+  T,
+  {}
+>;
