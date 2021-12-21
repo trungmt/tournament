@@ -26,14 +26,14 @@ teamsRouter.post(
 teamsRouter.post(
   '/',
   auth,
-  validationAsync(teamFieldValidationSchema),
+  validationAsync(teamFieldValidationSchema()),
   Team.create
 );
 
 teamsRouter.patch(
   '/:id',
   auth,
-  validationAsync(teamFieldValidationSchema),
+  validationAsync(teamFieldValidationSchema(true)),
   Team.update
 );
 
