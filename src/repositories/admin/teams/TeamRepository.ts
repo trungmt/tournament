@@ -17,13 +17,31 @@ export default class TeamRepository
   }
 
   async updateTeam(_id: string, team: ITeamDoc): Promise<ResultType | null> {
-    // TODO: validate _id of type ObjectID
-    return await this.model.findOneAndUpdate({ _id }, team, {
-      new: true,
+    const isValidId = ObjectID.isValid(_id);
+    if (isValidId === false) {
+      return null;
+    }
+
+    let oldTeam: ResultType | null = null;
+    if (team.flagIcon === '') {
+      oldTeam = await this.model.findById(_id);
+      if (oldTeam === null) {
+        return oldTeam;
+      }
+      team.flagIcon = oldTeam?.flagIcon;
+    }
+
+    oldTeam = await this.model.findOneAndUpdate({ _id }, team, {
       runValidators: true,
     });
+
+    return oldTeam;
   }
   async deleteTeam(_id: string): Promise<ResultType | null> {
+    const isValidId = ObjectID.isValid(_id);
+    if (isValidId === false) {
+      return null;
+    }
     return await this.model.findByIdAndDelete(_id);
   }
   async getTeams(
@@ -38,7 +56,11 @@ export default class TeamRepository
 
     return await this.getListWithPagination(filter, sort, limit, page);
   }
-  async getTeamById(id: ObjectID): Promise<ResultType | null> {
-    return await this.model.findById(id);
+  async getTeamById(_id: string): Promise<ResultType | null> {
+    const isValidId = ObjectID.isValid(_id);
+    if (isValidId === false) {
+      return null;
+    }
+    return await this.model.findById(_id);
   }
 }

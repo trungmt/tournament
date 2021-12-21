@@ -26,19 +26,21 @@ teamsRouter.post(
 teamsRouter.post(
   '/',
   auth,
-  validationAsync(teamFieldValidationSchema),
+  validationAsync(teamFieldValidationSchema()),
   Team.create
 );
 
 teamsRouter.patch(
   '/:id',
   auth,
-  validationAsync(teamFieldValidationSchema),
+  validationAsync(teamFieldValidationSchema(true)),
   Team.update
 );
 
 teamsRouter.delete('/:id', auth, Team.delete);
 
 teamsRouter.get('/', auth, Team.list);
+
+teamsRouter.get('/:id', auth, Team.detail);
 
 export default teamsRouter;

@@ -59,7 +59,7 @@ const flagIconFileUploadValidation: TestFunction<
 
 const flagIconFilePathValidation: TestFunction<string | undefined> =
   async function (this, value) {
-    if (typeof value === 'undefined') {
+    if (typeof value === 'undefined' || value === '') {
       return true;
     }
     const tempFilePath = path.join(
@@ -212,47 +212,69 @@ const duplicateShortNameValidation: TestFunction<
 };
 
 // NOTE:(message function - https://github.com/sideway/joi/blob/83092836583a7f4ce16cbf116b8776737e80d16f/test/base.js#L1920)
-export const teamFieldValidationSchema: SchemaOf<ITeamBodyForm> = object({
-  body: object({
-    name: string()
-      .required()
-      .label('Name')
-      .test(
-        'duplicateNameValidation',
-        '${label} value is already existed',
-        duplicateNameValidation
-      ),
-    shortName: string()
-      .required()
-      .label('Short Name')
-      .test(
-        'duplicateShortNameValidation',
-        '${label} value is already existed',
-        duplicateShortNameValidation
-      ),
-    permalink: string()
-      .required()
-      .matches(
-        /^([a-zA-Z0-9]+-)*[a-zA-Z0-9]+$/,
-        '${label} only accepts alphanumeric connected by dash'
-      )
-      .lowercase()
-      .label('Permalink')
-      .test(
-        'duplicatePermalinkValidation',
-        '${label} value is already existed',
-        duplicatePermalinkValidation
-      ),
-    flagIcon: string()
-      .required()
-      .label('Flag Icon')
-      .test(
-        'flagIconFilePathValidation',
-        'Invalid ${label} file path',
-        flagIconFilePathValidation
-      ),
-  }),
-});
+export const teamFieldValidationSchema = (
+  isUpdate: boolean = false
+): SchemaOf<ITeamBodyForm> =>
+  object({
+    body: object({
+      name: string()
+        .required()
+        .label('Name')
+        .test(
+          'duplicateNameValidation',
+          '${label} value is already existed',
+          duplicateNameValidation
+        ),
+      shortName: string()
+        .required()
+        .label('Short Name')
+        .test(
+          'duplicateShortNameValidation',
+          '${label} value is already existed',
+          duplicateShortNameValidation
+        ),
+      permalink: string()
+        .required()
+        .matches(
+          /^([a-zA-Z0-9]+-)*[a-zA-Z0-9]+$/,
+          '${label} only accepts alphanumeric connected by dash'
+        )
+        .lowercase()
+        .label('Permalink')
+        .test(
+          'duplicatePermalinkValidation',
+          '${label} value is already existed',
+          duplicatePermalinkValidation
+        ),
+      flagIconAdd: isUpdate
+        ? string()
+            .defined()
+            .default('')
+            .label('Flag Icon')
+            .when('flagIconDelete', {
+              is: (value: string) => value !== '',
+              then: string()
+                .required()
+                .test(
+                  'flagIconFilePathValidation',
+                  'Invalid ${label} file path',
+                  flagIconFilePathValidation
+                ),
+              otherwise: string().defined(),
+            })
+        : string()
+            .required()
+            .label('Flag Icon')
+            .test(
+              'flagIconFilePathValidation',
+              'Invalid ${label} file path',
+              flagIconFilePathValidation
+            ),
+      flagIconDelete: isUpdate
+        ? string().defined().default('').label('Flag Icon')
+        : string().label('Flag Icon'),
+    }),
+  });
 
 export const teamFileValidationSchema: SchemaOf<ITeamFileForm> = object({
   body: object({

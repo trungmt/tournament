@@ -12,5 +12,5 @@ export default interface ITeamsRepository {
     limit: string,
     page: string
   ): Promise<PaginationResult<ResultType>>;
-  getTeamById(id: ObjectID): Promise<ResultType | null>;
+  getTeamById(id: string): Promise<ResultType | null>;
 }

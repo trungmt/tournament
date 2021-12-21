@@ -18,8 +18,12 @@ interface IGroupDoc extends IGroup {
   nameDisplay: string;
 }
 
+type ITeamForm = Omit<ITeam, 'flagIcon'> & {
+  flagIconAdd: string;
+  flagIconDelete?: string;
+};
 interface ITeamBodyForm {
-  body: ITeam;
+  body: ITeamForm;
 }
 
 interface ITeamFileForm {

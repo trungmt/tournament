@@ -108,7 +108,7 @@ export const removeOldTempFiles = async (
           return;
         }
 
-        // if `filepath` is file get status of file for file's modification time
+        // if `filepath` is file, get status of file for file's modification time
         const fileStat = await stat(filePath);
 
         // if file modification date is older than removeTimeMs --> delete that file
@@ -161,4 +161,26 @@ export const moveUploadFile = async (
   }
 
   return targetFilePath;
+};
+
+export const removeUploadFile = async (
+  entityName: string, //TODO: make entityNames type, enum, const
+  fileName: string
+): Promise<void> => {
+  let result = true;
+  if (!fileName) {
+    return;
+  }
+  const targetFilePath = path.join(
+    process.env.UPLOAD_FILE_DIR!,
+    entityName,
+    fileName
+  );
+  try {
+    // if `filepath` is file, get status of file for file's modification time
+    const stats = await stat(targetFilePath);
+    await unlink(targetFilePath);
+  } catch (error) {
+    console.log('Error removeOldTempFiles', error);
+  }
 };
