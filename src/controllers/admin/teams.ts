@@ -5,8 +5,7 @@ import {
   ListQueryParams,
 } from '../AdminEntityControllerInterface';
 import TeamRepositoryInterface from '../../repositories/admin/teams/TeamRepositoryInterface';
-import Team from '../../models/team';
-import { moveUploadFile } from '../../services/FileService';
+import { moveUploadFile, removeUploadFile } from '../../services/FileService';
 import { CustomResponse } from '../../services/CustomResponse';
 import BaseError from '../../exceptions/BaseError';
 
@@ -30,11 +29,7 @@ export default class TeamController extends AdminAbstractController {
     //TODO: function to prepare env const
     const flagIconWidth = parseInt(process.env.DEFAULT_IMAGE_WIDTH!);
     try {
-      await moveUploadFile(
-        process.env.ENTITY_TEAMS!,
-        req.body.flagIcon,
-        flagIconWidth
-      );
+      await moveUploadFile(this.entityName, req.body.flagIcon, flagIconWidth);
 
       const team = await this.repository.insertTeam(teamFormData);
 
@@ -45,21 +40,35 @@ export default class TeamController extends AdminAbstractController {
   };
 
   update = async (
-    req: Request<DetailFormParams, {}, ITeamDoc>,
+    req: Request<DetailFormParams, {}, ITeamForm>,
     res: Response,
     next: NextFunction
   ) => {
     const _id = req.params.id;
-    const teamFormData = this.nameTransform(req.body);
+    const { name, shortName, permalink, flagIconAdd, flagIconDelete } =
+      req.body;
+    const teamData: ITeamDoc = {
+      name,
+      nameDisplay: name,
+      shortName,
+      shortNameDisplay: shortName,
+      permalink,
+      flagIcon: flagIconAdd,
+    };
+
+    const teamFormData = this.nameTransform(teamData);
     //TODO: function to prepare env const
     const flagIconWidth = parseInt(process.env.DEFAULT_IMAGE_WIDTH!);
 
     try {
-      await moveUploadFile(
-        process.env.ENTITY_TEAMS!,
-        req.body.flagIcon,
-        flagIconWidth
-      );
+      // In case of update, if flagIconAdd is not specify, dont change flagIcon
+      if (flagIconAdd) {
+        await moveUploadFile(
+          process.env.ENTITY_TEAMS!,
+          req.body.flagIconAdd,
+          flagIconWidth
+        );
+      }
 
       const team = await this.repository.updateTeam(_id, teamFormData);
 
@@ -71,6 +80,12 @@ export default class TeamController extends AdminAbstractController {
           false,
           { redirect: '/api/admin/teams' }
         );
+      }
+
+      const { flagIcon } = team;
+      // In case of update, if flagIconAdd is not specify, dont change flagIcon
+      if (flagIconAdd) {
+        await removeUploadFile(this.entityName, flagIcon);
       }
 
       res.status(200).send(team);

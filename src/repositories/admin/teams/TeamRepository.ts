@@ -21,10 +21,21 @@ export default class TeamRepository
     if (isValidId === false) {
       return null;
     }
-    return await this.model.findOneAndUpdate({ _id }, team, {
-      new: true,
+
+    let oldTeam: ResultType | null = null;
+    if (team.flagIcon === '') {
+      oldTeam = await this.model.findById(_id);
+      if (oldTeam === null) {
+        return oldTeam;
+      }
+      team.flagIcon = oldTeam?.flagIcon;
+    }
+
+    oldTeam = await this.model.findOneAndUpdate({ _id }, team, {
       runValidators: true,
     });
+
+    return oldTeam;
   }
   async deleteTeam(_id: string): Promise<ResultType | null> {
     const isValidId = ObjectID.isValid(_id);
