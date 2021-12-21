@@ -53,14 +53,14 @@ const teamSchema = new Schema<ITeamDoc, ITeamModel, ITeamDoc>(
 // -- schema document methods --
 teamSchema.methods.toJSON = function (): ITeam & { _id: ObjectID } {
   // TODO: write a plugin to reduce values should be shown when call toJSON
-  const userObject = this.toObject();
+  const teamObject = this.toObject();
 
   return {
-    _id: userObject._id,
-    name: userObject.nameDisplay,
-    shortName: userObject.shortNameDisplay,
-    permalink: userObject.permalink,
-    flagIcon: userObject.flagIcon,
+    _id: teamObject._id,
+    name: teamObject.nameDisplay,
+    shortName: teamObject.shortNameDisplay,
+    permalink: teamObject.permalink,
+    flagIcon: teamObject.flagIcon,
   };
 };
 
