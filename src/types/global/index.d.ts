@@ -27,6 +27,7 @@ interface ITournamentDoc extends ITournament {
   nameDisplay: string;
 }
 
+type ITournamentForm = ITournament;
 interface ITournamentBodyForm {
   body: ITournament;
 }
