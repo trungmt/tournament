@@ -1,9 +1,9 @@
 import { ObjectID } from 'mongodb';
+import { Document, FilterQuery, Types } from 'mongoose';
 import { PaginationResult } from '../../../services/PaginationService';
 import TournamentModel, { ITournamentModel } from '../../../models/tournament';
 import TournamentRepositoryInterface from './TournamentRepositoryInterface';
 import Repository from '../Repository';
-import { Document, FilterQuery, Types } from 'mongoose';
 
 export default class TournamentRepository
   extends Repository<ITournamentDoc, {}>
