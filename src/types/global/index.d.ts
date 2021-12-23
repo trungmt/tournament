@@ -1,25 +1,13 @@
-enum StageType {
-  SingleElimination = 1,
-  DoubleElimination,
-  RoundRobin,
-}
-
-enum RoundRobinType {
-  Once = 1,
-  Twice = 2,
-  Thrice = 3,
-}
-
 interface ITournament {
   name: string;
   permalink: string;
   groupStageEnable: boolean;
-  groupStageType: StageType | null;
+  groupStageType: import('./index').StageType | null;
   groupStageGroupSize: number | null;
   groupStageGroupAdvancedSize: number | null;
-  groupStageRoundRobinType: RoundRobinType | null;
-  finalStageType: StageType;
-  finalStageRoundRobinType: RoundRobinType;
+  groupStageRoundRobinType: import('./index').RoundRobinType | null;
+  finalStageType: import('./index').StageType;
+  finalStageRoundRobinType: import('./index').RoundRobinType | null;
   finalStageSingleBronzeEnable: boolean | null;
 }
 

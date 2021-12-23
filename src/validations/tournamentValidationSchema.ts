@@ -16,6 +16,7 @@ import {
   isStageTypeSingle,
   isStageTypeDouble,
 } from '../services/ValidationService';
+import { RoundRobinType, StageType } from '../types/global';
 
 const duplicatePermalinkValidation: TestFunction<
   string | undefined,

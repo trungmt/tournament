@@ -1,3 +1,5 @@
+import { StageType } from '../types/global';
+
 export const validatePermalinkPattern = (permalink: string): boolean =>
   /^([a-zA-Z0-9]+-)*[a-zA-Z0-9]+$/.test(permalink);
 
@@ -15,5 +17,8 @@ export const isStageTypeSingle = (type: StageType | null): boolean =>
 export const isStageTypeDouble = (type: StageType | null): boolean =>
   type === StageType.DoubleElimination;
 
-export const getStageTypeValidationMessage = (label: string): string =>
-  `${label} have to be one of these types: ${Object.keys(StageType).join(',')}`;
+export const getStageTypeValidationMessage = (label: string): string => {
+  return `${label} have to be one of these types: ${Object.keys(StageType).join(
+    ','
+  )}`;
+};
