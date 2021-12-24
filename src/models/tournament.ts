@@ -23,7 +23,7 @@ const tournamentSchema = new Schema<
   },
   nameDisplay: {
     type: String,
-    required: true,
+    default: (doc: ITournamentDoc) => doc.name,
   },
   permalink: {
     type: String,
@@ -44,6 +44,7 @@ const tournamentSchema = new Schema<
   },
   groupStageType: {
     type: Number,
+    default: null,
     required: function (this: ITournamentDoc) {
       return this.groupStageEnable;
     },
@@ -54,18 +55,21 @@ const tournamentSchema = new Schema<
   },
   groupStageGroupSize: {
     type: Number,
+    default: null,
     required: function (this: ITournamentDoc) {
       return this.groupStageEnable;
     },
   },
   groupStageGroupAdvancedSize: {
     type: Number,
+    default: null,
     required: function (this: ITournamentDoc) {
       return this.groupStageEnable;
     },
   },
   groupStageRoundRobinType: {
     type: Number,
+    default: null,
     required: function (this: ITournamentDoc) {
       return (
         this.groupStageEnable && isStageTypeRoundRobin(this.groupStageType)
@@ -82,12 +86,14 @@ const tournamentSchema = new Schema<
   },
   finalStageRoundRobinType: {
     type: Number,
+    default: null,
     required: function (this: ITournamentDoc) {
       return isStageTypeRoundRobin(this.finalStageType);
     },
   },
   finalStageSingleBronzeEnable: {
     type: Boolean,
+    default: null,
     required: function (this: ITournamentDoc) {
       return isStageTypeSingle(this.finalStageType);
     },
@@ -101,6 +107,7 @@ tournamentSchema.methods.toJSON = function (): ITournament & { _id: ObjectID } {
   const {
     _id,
     name,
+    nameDisplay,
     permalink,
     groupStageEnable,
     groupStageType,
@@ -114,7 +121,7 @@ tournamentSchema.methods.toJSON = function (): ITournament & { _id: ObjectID } {
 
   return {
     _id,
-    name,
+    name: nameDisplay ? nameDisplay : name,
     permalink,
     groupStageEnable,
     groupStageType,
@@ -126,6 +133,20 @@ tournamentSchema.methods.toJSON = function (): ITournament & { _id: ObjectID } {
     finalStageRoundRobinType,
   };
 };
+
+const prepareName = (document: ITournamentDoc) => {
+  document.nameDisplay = document.name;
+  document.name = document.name.toLowerCase();
+};
+tournamentSchema.pre('save', function (this, next) {
+  prepareName(this);
+  next();
+});
+tournamentSchema.pre('findOneAndUpdate', async function (next) {
+  let update = this.getUpdate();
+  prepareName(update as ITournamentDoc); // TODO: careful, not works all case
+  next();
+});
 
 const TournamentModel = model<ITournamentDoc, ITournamentModel>(
   'Tournament',

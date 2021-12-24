@@ -12,7 +12,7 @@ interface ITournament {
 }
 
 interface ITournamentDoc extends ITournament {
-  nameDisplay: string;
+  nameDisplay?: string;
 }
 
 type ITournamentForm = ITournament;

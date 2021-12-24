@@ -1,6 +1,8 @@
 import { NextFunction, Request, Response, RequestHandler } from 'express';
+import { mixed, object, string, boolean } from 'yup';
 import BaseError from '../../exceptions/BaseError';
 import TournamentRepositoryInterface from '../../repositories/admin/tournaments/TournamentRepositoryInterface';
+import { StageType } from '../../types/global';
 import AdminAbstractController from '../AdminAbstractController';
 import {
   DetailFormParams,
@@ -79,16 +81,6 @@ export default class TournamentController extends AdminAbstractController {
     next: NextFunction
   ) => {};
 
-  // tournament model will has 2 field for name: name and nameDisplay
-  // prepare them so that, nameDisplay is what user input
-  //                       name is lowercase of what user input (for duplicate validation purpose)
-  nameTransform = (tournamentFormData: ITournamentDoc) => {
-    tournamentFormData.nameDisplay = tournamentFormData.name;
-    tournamentFormData.name = tournamentFormData.name.toLowerCase();
-
-    return tournamentFormData;
-  };
-
   prepareTournamentFormFromBody = (body: ITournamentForm): ITournamentDoc => {
     const {
       name,
@@ -105,7 +97,6 @@ export default class TournamentController extends AdminAbstractController {
 
     const tournamentData: ITournamentDoc = {
       name,
-      nameDisplay: name,
       permalink,
       groupStageEnable,
       groupStageGroupSize,
@@ -116,9 +107,8 @@ export default class TournamentController extends AdminAbstractController {
       finalStageRoundRobinType,
       finalStageSingleBronzeEnable,
     };
+    console.log('tournamentData', tournamentData);
 
-    const tournamentFormData = this.nameTransform(tournamentData);
-
-    return tournamentFormData;
+    return tournamentData;
   };
 }
