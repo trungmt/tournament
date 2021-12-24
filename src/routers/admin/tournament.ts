@@ -14,14 +14,14 @@ const Tournament = new TournamentController(entityName, service);
 tournamentsRouter.post(
   '/',
   auth,
-  validationAsync(tournamentFieldValidationSchema()),
+  validationAsync(tournamentFieldValidationSchema(), true),
   Tournament.create
 );
 
 tournamentsRouter.patch(
   '/:id',
   auth,
-  validationAsync(tournamentFieldValidationSchema(true)),
+  validationAsync(tournamentFieldValidationSchema(true), true),
   Tournament.update
 );
 

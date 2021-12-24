@@ -15,6 +15,8 @@ import {
   isStageTypeRoundRobin,
   isStageTypeSingle,
   isStageTypeDouble,
+  validateStageType,
+  getStageTypeValidationMessage,
 } from '../services/ValidationService';
 import { RoundRobinType, StageType } from '../types/global';
 
@@ -118,6 +120,16 @@ const numberOnlyPowerOf2Validation: TestFunction<
   return Math.log2(value) % 1 === 0;
 };
 
+const stageTypeValidation: TestFunction<
+  StageType | undefined,
+  Record<string, any>
+> = async function (this, value) {
+  if (typeof value === 'undefined') {
+    return true;
+  }
+  return validateStageType(value);
+};
+
 // NOTE:(message function - https://github.com/sideway/joi/blob/83092836583a7f4ce16cbf116b8776737e80d16f/test/base.js#L1920)
 export const tournamentFieldValidationSchema = (
   isUpdate: boolean = false
@@ -151,8 +163,19 @@ export const tournamentFieldValidationSchema = (
         .label('Group Stage Type')
         .when('groupStageEnable', {
           is: (groupStageEnableVal: boolean) => groupStageEnableVal === true,
-          then: mixed<StageType>().required(),
-          otherwise: mixed<StageType>().default(null),
+          then: mixed<StageType>()
+            .required()
+            .test(
+              'stageTypeValidation',
+              getStageTypeValidationMessage('${label}'),
+              stageTypeValidation
+            ),
+          otherwise: mixed<StageType>()
+            .nullable()
+            .default(null)
+            .transform(function (current, original) {
+              return null;
+            }),
         }),
       groupStageGroupSize: number()
         .default(4) //TODO: define constants
@@ -223,13 +246,17 @@ export const tournamentFieldValidationSchema = (
           otherwise: mixed<RoundRobinType>().default(null),
         }),
       finalStageSingleBronzeEnable: boolean()
-        .default(null)
+        .default(false)
         .label('Include a match for 3rd place')
         .when('finalStageType', {
           is: (finalStageTypeVal: StageType) =>
             isStageTypeSingle(finalStageTypeVal),
           then: boolean().required(),
-          otherwise: boolean().default(null),
+          otherwise: boolean()
+            .default(null)
+            .transform(function (value) {
+              return null;
+            }),
         }),
     }),
   });
