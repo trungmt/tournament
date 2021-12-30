@@ -106,7 +106,7 @@ describe(`POST ${uploadFlagIconURL}`, () => {
   });
 });
 
-describe('POST /api/admin/teams', () => {
+describe(`POST ${createTeamURL}`, () => {
   let flagIconAdd: string = '';
   beforeEach(async () => {
     const responseUploadFlagIcon = await request(app)

@@ -143,3 +143,19 @@ export const setupTournamentDatabase = async () => {
     throw new Error('Error setupTournamentDatabase');
   }
 };
+
+export const setupTournamentListDatabase = async () => {
+  await Tournament.deleteMany();
+
+  const tournamentList: ITournamentDoc[] = [];
+  for (let index = 1; index < 33; index++) {
+    tournamentList.push({
+      ...groupDisabledtournamentForm,
+      name: `${index}`,
+      permalink: `${index}`,
+    });
+  }
+
+  const tournaments = await Tournament.insertMany(tournamentList);
+  return tournaments;
+};
