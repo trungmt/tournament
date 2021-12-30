@@ -35,12 +35,17 @@ export default class TournamentRepository
   ): Promise<RepositoryResultType<ITournamentDoc> | null> {
     throw new Error('Method not implemented.');
   }
-  getTournaments(
-    query: string,
+  async getTournaments(
+    query: string = '',
     limit: string,
     page: string
   ): Promise<PaginationResult<RepositoryResultType<ITournamentDoc>>> {
-    throw new Error('Method not implemented.');
+    const filter: FilterQuery<RepositoryResultType<ITeamDoc>> = {
+      name: { $regex: '.*' + query + '.*', $options: 'i' },
+    };
+    const sort = { createdAt: -1, _id: -1 };
+
+    return await this.getListWithPagination(filter, sort, limit, page);
   }
   getTournamentById(
     id: string

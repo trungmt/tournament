@@ -74,7 +74,16 @@ export default class TournamentController extends AdminAbstractController {
     req: Request<{}, {}, ITournament>,
     res: Response,
     next: NextFunction
-  ) => {};
+  ) => {
+    try {
+      const { query, limit, page } = req.query as TournamentsListQueryParams;
+      const list = await this.repository.getTournaments(query, limit, page);
+
+      res.status(200).send(list);
+    } catch (error) {
+      next(error);
+    }
+  };
   detail = async (
     req: Request<DetailFormParams, {}, ITournament>,
     res: Response,
