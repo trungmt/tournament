@@ -10,16 +10,20 @@ const options = {
 };
 
 export const validationAsync =
-  (schema: AnyObjectSchema): RequestHandler =>
+  (schema: AnyObjectSchema, castBody: boolean = false): RequestHandler =>
   async (req: Request, res: Response, next: NextFunction) => {
     if (!req.errors) req.errors = {};
     const _id = req.params.id;
-
     try {
       await schema.validate(req, {
         ...options,
         context: { next, _id },
       });
+      if (castBody === true) {
+        const transformedBody = schema.cast({ body: req.body });
+        req.body = transformedBody.body;
+      }
+
       next();
       return;
     } catch (error) {
@@ -42,12 +46,13 @@ export const validationAsync =
         return;
       }
       // console.log('Error validationAsync', error);
-      throw new BaseError(
-        'Error when running validation',
+      const baseError = new BaseError(
+        'Error when running validation: ' + (error as Error).message,
         'Error when running validation',
         500,
         false
       );
+      next(baseError);
     }
   };
 

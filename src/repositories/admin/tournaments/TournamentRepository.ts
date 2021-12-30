@@ -1,9 +1,9 @@
 import { ObjectID } from 'mongodb';
+import { Document, FilterQuery, Types } from 'mongoose';
 import { PaginationResult } from '../../../services/PaginationService';
 import TournamentModel, { ITournamentModel } from '../../../models/tournament';
 import TournamentRepositoryInterface from './TournamentRepositoryInterface';
 import Repository from '../Repository';
-import { Document, FilterQuery, Types } from 'mongoose';
 
 export default class TournamentRepository
   extends Repository<ITournamentDoc, {}>
@@ -12,53 +12,39 @@ export default class TournamentRepository
   constructor(model: ITournamentModel = TournamentModel) {
     super(model);
   }
-  insertTournament(
+  async insertTournament(
     tournament: ITournamentDoc
-  ): Promise<
-    | (Document<any, any, ITournamentDoc> &
-        ITournamentDoc & { _id: Types.ObjectId })
-    | null
-  > {
-    throw new Error('Method not implemented.');
+  ): Promise<RepositoryResultType<ITournamentDoc> | null> {
+    return await this.model.create(tournament);
   }
-  updateTournament(
+  async updateTournament(
     _id: string,
     tournament: ITournamentDoc
-  ): Promise<
-    | (Document<any, any, ITournamentDoc> &
-        ITournamentDoc & { _id: Types.ObjectId })
-    | null
-  > {
-    throw new Error('Method not implemented.');
+  ): Promise<RepositoryResultType<ITournamentDoc> | null> {
+    const isValidId = ObjectID.isValid(_id);
+    if (isValidId === false) {
+      return null;
+    }
+
+    return await this.model.findOneAndUpdate({ _id }, tournament, {
+      runValidators: true,
+    });
   }
   deleteTournament(
     _id: string
-  ): Promise<
-    | (Document<any, any, ITournamentDoc> &
-        ITournamentDoc & { _id: Types.ObjectId })
-    | null
-  > {
+  ): Promise<RepositoryResultType<ITournamentDoc> | null> {
     throw new Error('Method not implemented.');
   }
   getTournaments(
     query: string,
     limit: string,
     page: string
-  ): Promise<
-    PaginationResult<
-      Document<any, any, ITournamentDoc> &
-        ITournamentDoc & { _id: Types.ObjectId }
-    >
-  > {
+  ): Promise<PaginationResult<RepositoryResultType<ITournamentDoc>>> {
     throw new Error('Method not implemented.');
   }
   getTournamentById(
     id: string
-  ): Promise<
-    | (Document<any, any, ITournamentDoc> &
-        ITournamentDoc & { _id: Types.ObjectId })
-    | null
-  > {
+  ): Promise<RepositoryResultType<ITournamentDoc> | null> {
     throw new Error('Method not implemented.');
   }
 }

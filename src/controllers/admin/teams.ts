@@ -87,8 +87,7 @@ export default class TeamController extends AdminAbstractController {
           'This team does not exists. Please check again.',
           'This team does not exists. Please check again.',
           404,
-          false,
-          { redirect: '/api/admin/teams' }
+          false
         );
       }
 
@@ -118,8 +117,7 @@ export default class TeamController extends AdminAbstractController {
           'This team does not exists. Please check again.',
           'This team does not exists. Please check again.',
           404,
-          false,
-          { redirect: '/api/admin/teams' }
+          false
         );
       }
       res.status(200).send(team);
@@ -156,8 +154,7 @@ export default class TeamController extends AdminAbstractController {
           'This team does not exists. Please check again.',
           'This team does not exists. Please check again.',
           404,
-          false,
-          { redirect: '/api/admin/teams' }
+          false
         );
       }
       res.status(200).send(team);

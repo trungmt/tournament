@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node ./build/server.js",
-    "dev": "env-cmd -f ./config/dev.env nodemon",
-    "test": "env-cmd -f ./config/test.env jest --watch --runInBand"
+    "dev": "env-cmd -f .env.development nodemon",
+    "test": "env-cmd -f .env.test jest --watch --runInBand"
   },
   "keywords": [],
   "author": "",

@@ -1,6 +1,8 @@
 import User, { IUser } from '../../models/user';
 import Team from '../../models/team';
+import Tournament from '../../models/tournament';
 import { moveUploadFile } from '../../services/FileService';
+import { RoundRobinType, StageType } from '../../types/global';
 
 export const userOne: IUser = {
   username: 'trungtm',
@@ -88,5 +90,56 @@ export const setupTeamListDatabase = async () => {
     return teams;
   } catch (error) {
     throw new Error('no file');
+  }
+};
+
+export const groupDisabledtournamentForm: ITournamentForm = {
+  name: 'euro 2021',
+  permalink: 'euro-2021',
+  groupStageEnable: false,
+  groupStageGroupSize: null,
+  groupStageGroupAdvancedSize: null,
+  groupStageType: null,
+  groupStageRoundRobinType: null,
+  finalStageType: StageType.SingleElimination,
+  finalStageRoundRobinType: null,
+  finalStageSingleBronzeEnable: false,
+};
+
+export const groupEnabledTournamentForm: ITournamentForm = {
+  name: 'The international 2021',
+  permalink: 'the-international-2021',
+  groupStageEnable: true,
+  groupStageGroupSize: 4,
+  groupStageGroupAdvancedSize: 2,
+  groupStageType: StageType.RoundRobin,
+  groupStageRoundRobinType: RoundRobinType.Once,
+  finalStageType: StageType.SingleElimination,
+  finalStageRoundRobinType: null,
+  finalStageSingleBronzeEnable: false,
+};
+
+export const setupTournamentDatabase = async () => {
+  await Tournament.deleteMany();
+
+  try {
+    const tournamentOne: ITournamentDoc = {
+      name: 'euro 2021',
+      nameDisplay: 'Euro 2021',
+      permalink: 'euro-2021',
+      groupStageEnable: false,
+      groupStageGroupSize: null,
+      groupStageGroupAdvancedSize: null,
+      groupStageType: null,
+      groupStageRoundRobinType: null,
+      finalStageType: StageType.SingleElimination,
+      finalStageRoundRobinType: null,
+      finalStageSingleBronzeEnable: false,
+    };
+
+    const tournament = await new Tournament(tournamentOne).save();
+    return { tournament };
+  } catch (error) {
+    throw new Error('Error setupTournamentDatabase');
   }
 };
