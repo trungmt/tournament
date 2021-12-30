@@ -518,118 +518,123 @@ describe(`list tournament - GET ${listTournamentURL}`, () => {
     const expectTournamentList = tournamentList
       .slice(tournamentList.length - defaultPaginLimit)
       .reverse();
-    const response = await request(app)
+    const sut = await request(app)
       .get(listTournamentURL)
       .set('Authorization', `Bearer ${userOneToken}`)
       .set('Connection', 'keep-alive')
-      .send()
-      .expect(200);
+      .send();
 
-    const resultTournaments = response.body.results as ITournamentDoc[];
+    expect(sut.status).toBe(200);
+
+    const resultTournaments = sut.body.results as ITournamentDoc[];
 
     expect(resultTournaments.length).toBe(defaultPaginLimit);
     expect(resultTournaments).toEqual(
       JSON.parse(JSON.stringify(expectTournamentList))
     );
-    expect(response.body.current).toBe(defaultPaginPage);
-    expect(response.body.limit).toBe(defaultPaginLimit);
-    expect(response.body.lastPage).toBe(4);
-    expect(response.body.previous).toBeNull();
-    expect(response.body.next).toBe(2);
+    expect(sut.body.current).toBe(defaultPaginPage);
+    expect(sut.body.limit).toBe(defaultPaginLimit);
+    expect(sut.body.lastPage).toBe(4);
+    expect(sut.body.previous).toBeNull();
+    expect(sut.body.next).toBe(2);
   });
 
   test(`Should list first page tournaments if no limit and page specified`, async () => {
     const expectTournamentList = tournamentList
       .slice(tournamentList.length - defaultPaginLimit)
       .reverse();
-    const response = await request(app)
+    const sut = await request(app)
       .get(`${listTournamentURL}?limit=&page=`)
       .set('Authorization', `Bearer ${userOneToken}`)
       .set('Connection', 'keep-alive')
-      .send()
-      .expect(200);
+      .send();
 
-    const resultTournaments = response.body.results as ITournamentDoc[];
+    expect(sut.status).toBe(200);
+
+    const resultTournaments = sut.body.results as ITournamentDoc[];
 
     expect(resultTournaments.length).toBe(defaultPaginLimit);
     expect(resultTournaments).toEqual(
       JSON.parse(JSON.stringify(expectTournamentList))
     );
-    expect(response.body.current).toBe(defaultPaginPage);
-    expect(response.body.limit).toBe(defaultPaginLimit);
-    expect(response.body.lastPage).toBe(4);
-    expect(response.body.previous).toBeNull();
-    expect(response.body.next).toBe(2);
+    expect(sut.body.current).toBe(defaultPaginPage);
+    expect(sut.body.limit).toBe(defaultPaginLimit);
+    expect(sut.body.lastPage).toBe(4);
+    expect(sut.body.previous).toBeNull();
+    expect(sut.body.next).toBe(2);
   });
 
   test(`Should list tournaments with previous and next page`, async () => {
     const limit = 2,
       page = 3;
-    const response = await request(app)
+    const sut = await request(app)
       .get(`${listTournamentURL}?limit=${limit}&page=${page}`)
       .set('Authorization', `Bearer ${userOneToken}`)
       .set('Connection', 'keep-alive')
-      .send()
-      .expect(200);
+      .send();
+
+    expect(sut.status).toBe(200);
 
     const expectTournamentList = tournamentList
       .slice(tournamentList.length - 6, tournamentList.length - 4)
       .reverse();
-    const resultTournaments = response.body.results as ITournamentDoc[];
+    const resultTournaments = sut.body.results as ITournamentDoc[];
 
     expect(resultTournaments.length).toBe(limit);
     expect(resultTournaments).toEqual(
       JSON.parse(JSON.stringify(expectTournamentList))
     );
-    expect(response.body.current).toBe(page);
-    expect(response.body.limit).toBe(limit);
-    expect(response.body.lastPage).toBe(16);
-    expect(response.body.previous).toBe(page - 1);
-    expect(response.body.next).toBe(page + 1);
+    expect(sut.body.current).toBe(page);
+    expect(sut.body.limit).toBe(limit);
+    expect(sut.body.lastPage).toBe(16);
+    expect(sut.body.previous).toBe(page - 1);
+    expect(sut.body.next).toBe(page + 1);
   });
 
   test(`Should list last page`, async () => {
     const page = 4;
-    const response = await request(app)
+    const sut = await request(app)
       .get(`${listTournamentURL}?limit=&page=${page}`)
       .set('Authorization', `Bearer ${userOneToken}`)
       .set('Connection', 'keep-alive')
-      .send()
-      .expect(200);
+      .send();
+
+    expect(sut.status).toBe(200);
 
     const expectTournamentList = tournamentList.slice(0, 2).reverse();
-    const resultTournaments = response.body.results as ITournamentDoc[];
+    const resultTournaments = sut.body.results as ITournamentDoc[];
     expect(resultTournaments.length).toBe(2);
     expect(resultTournaments).toEqual(
       JSON.parse(JSON.stringify(expectTournamentList))
     );
-    expect(response.body.current).toBe(page);
-    expect(response.body.limit).toBe(defaultPaginLimit);
-    expect(response.body.lastPage).toBe(4);
-    expect(response.body.previous).toBe(page - 1);
-    expect(response.body.next).toBeNull();
+    expect(sut.body.current).toBe(page);
+    expect(sut.body.limit).toBe(defaultPaginLimit);
+    expect(sut.body.lastPage).toBe(4);
+    expect(sut.body.previous).toBe(page - 1);
+    expect(sut.body.next).toBeNull();
   });
 
   test(`Should list nothing because out of page range`, async () => {
     const page = 10;
-    const response = await request(app)
+    const sut = await request(app)
       .get(`${listTournamentURL}?limit=&page=${page}`)
       .set('Authorization', `Bearer ${userOneToken}`)
       .set('Connection', 'keep-alive')
-      .send()
-      .expect(200);
+      .send();
+
+    expect(sut.status).toBe(200);
 
     const expectTournamentList = [] as ITournamentDoc[];
-    const resultTournaments = response.body.results as ITournamentDoc[];
+    const resultTournaments = sut.body.results as ITournamentDoc[];
     expect(resultTournaments.length).toBe(0);
     expect(resultTournaments).toEqual(
       JSON.parse(JSON.stringify(expectTournamentList))
     );
-    expect(response.body.current).toBeNull();
-    expect(response.body.limit).toBe(defaultPaginLimit);
-    expect(response.body.lastPage).toBe(4);
-    expect(response.body.previous).toBeNull();
-    expect(response.body.next).toBeNull();
+    expect(sut.body.current).toBeNull();
+    expect(sut.body.limit).toBe(defaultPaginLimit);
+    expect(sut.body.lastPage).toBe(4);
+    expect(sut.body.previous).toBeNull();
+    expect(sut.body.next).toBeNull();
   });
 });
 
@@ -688,44 +693,44 @@ describe(`detail tournament - GET ${detailTournamentURL}`, () => {
 
     expect(sut.status).toBe(404);
   });
+});
 
-  describe(`delete tournament - DELETE ${deleteTournamentURL}`, () => {
-    let _idString: string;
-    beforeEach(() => {
-      const _id = initTournament._id as ObjectID;
-      _idString = _id.toHexString();
-    });
-    test(`Should delete tournament`, async () => {
-      const url = deleteTournamentURL.replace(':id', _idString);
-      const sut = await request(app)
-        .delete(url)
-        .set('Authorization', `Bearer ${userOneToken}`)
-        .set('Connection', 'keep-alive')
-        .send();
-      expect(sut.status).toBe(200);
-      expect(sut.body._id).toBe(_idString);
-    });
+describe(`delete tournament - DELETE ${deleteTournamentURL}`, () => {
+  let _idString: string;
+  beforeEach(() => {
+    const _id = initTournament._id as ObjectID;
+    _idString = _id.toHexString();
+  });
+  test(`Should delete tournament`, async () => {
+    const url = deleteTournamentURL.replace(':id', _idString);
+    const sut = await request(app)
+      .delete(url)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .send();
+    expect(sut.status).toBe(200);
+    expect(sut.body._id).toBe(_idString);
+  });
 
-    test(`Should response not found error if delete tournament that doesnt exist in db`, async () => {
-      const _idString = 'wrongid'; // ObjectID from past
-      const url = deleteTournamentURL.replace(':id', _idString);
-      const sut = await request(app)
-        .delete(url)
-        .set('Authorization', `Bearer ${userOneToken}`)
-        .set('Connection', 'keep-alive')
-        .send();
+  test(`Should response not found error if delete tournament that doesnt exist in db`, async () => {
+    const _idString = 'wrongid'; // ObjectID from past
+    const url = deleteTournamentURL.replace(':id', _idString);
+    const sut = await request(app)
+      .delete(url)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .send();
 
-      expect(sut.status).toBe(404);
-    });
+    expect(sut.status).toBe(404);
+  });
 
-    test('Should not delete tournament for unauthorized user', async () => {
-      const url = deleteTournamentURL.replace(':id', _idString);
-      const sut = await request(app)
-        .delete(url)
-        .set('Connection', 'keep-alive')
-        .send();
+  test('Should not delete tournament for unauthorized user', async () => {
+    const url = deleteTournamentURL.replace(':id', _idString);
+    const sut = await request(app)
+      .delete(url)
+      .set('Connection', 'keep-alive')
+      .send();
 
-      expect(sut.status).toBe(401);
-    });
+    expect(sut.status).toBe(401);
   });
 });
