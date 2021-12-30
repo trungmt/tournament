@@ -15,14 +15,14 @@ export const validationAsync =
     if (!req.errors) req.errors = {};
     const _id = req.params.id;
     try {
-      if (castBody === true) {
-        const transformedBody = schema.cast({ body: req.body });
-        req.body = transformedBody.body;
-      }
       await schema.validate(req, {
         ...options,
         context: { next, _id },
       });
+      if (castBody === true) {
+        const transformedBody = schema.cast({ body: req.body });
+        req.body = transformedBody.body;
+      }
 
       next();
       return;

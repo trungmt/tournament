@@ -107,7 +107,6 @@ export default class TournamentController extends AdminAbstractController {
       finalStageRoundRobinType,
       finalStageSingleBronzeEnable,
     };
-    console.log('tournamentData', tournamentData);
 
     return tournamentData;
   };
