@@ -69,7 +69,24 @@ export default class TournamentController extends AdminAbstractController {
     req: Request<DetailFormParams, {}, ITournament>,
     res: Response,
     next: NextFunction
-  ) => {};
+  ) => {
+    const _id = req.params.id;
+    try {
+      const tournament = await this.repository.deleteTournament(_id);
+
+      if (!tournament) {
+        throw new BaseError(
+          'This tournament does not exists. Please check again.',
+          'This tournament does not exists. Please check again.',
+          404,
+          false
+        );
+      }
+      res.status(200).send(tournament);
+    } catch (error) {
+      next(error);
+    }
+  };
   list = async (
     req: Request<{}, {}, ITournament>,
     res: Response,
