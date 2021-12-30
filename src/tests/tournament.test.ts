@@ -1,0 +1,505 @@
+import request from 'supertest';
+import { Document } from 'mongoose';
+import app from '../app';
+import {
+  setupUserDatabase,
+  setupTournamentDatabase,
+  groupEnabledTournamentForm,
+  groupDisabledtournamentForm,
+} from './fixtures/db';
+import Tournament from '../models/tournament';
+import { ObjectID } from 'mongodb';
+import { RoundRobinType, StageType } from '../types/global';
+
+// TODO: add locale files to store constants related to validation messages
+
+let userOneToken: string;
+let userTwoToken: string;
+let tournament: ITournamentDoc & Document<any, any, ITournamentDoc>;
+
+beforeEach(async () => {
+  const initUserDBResult = await setupUserDatabase();
+  const initTournamentDBResult = await setupTournamentDatabase();
+  userOneToken = initUserDBResult.userOneToken;
+  userTwoToken = initUserDBResult.userTwoToken;
+  tournament = initTournamentDBResult.tournament;
+});
+
+const basicAPIURL = '/api/v1';
+const adminAPIURL = `${basicAPIURL}/admin`;
+const createTournamentURL = `${adminAPIURL}/tournaments`;
+const updateTournamentURL = `${adminAPIURL}/tournaments/:id`;
+const deleteTournamentURL = `${adminAPIURL}/tournaments/:id`;
+const listTournamentURL = `${adminAPIURL}/tournaments`;
+
+describe(`create tournament - POST ${createTournamentURL}`, () => {
+  describe('validation test', () => {
+    test('should not create tournament for unauthorized user', async () => {
+      const sut = await request(app)
+        .post(createTournamentURL)
+        // with attach(), test run inconsistently,
+        // sometimes there are failed testcase with `read ECONNRESET` or `write ECONNABORTED` errors
+        .set('Connection', 'keep-alive')
+        .send(groupDisabledtournamentForm);
+
+      expect(sut.status).toBe(401);
+    });
+
+    test('should not create tournament because of missing basic required fields', async () => {
+      const {
+        name,
+        permalink,
+        groupStageEnable,
+        finalStageType,
+        ...notRequiredFields
+      } = groupDisabledtournamentForm;
+      let missingRequiredFieldsTour = {
+        ...notRequiredFields,
+      };
+      const sut = await request(app)
+        .post(createTournamentURL)
+        // with attach(), test run inconsistently,
+        // sometimes there are failed testcase with `read ECONNRESET` or `write ECONNABORTED` errors
+        .set('Authorization', `Bearer ${userOneToken}`)
+        .set('Connection', 'keep-alive')
+        .send(missingRequiredFieldsTour);
+
+      expect(sut.status).toBe(422);
+      expect(sut.body.name).toBe('ValidationError');
+      expect(sut.body.data.name).toBe('Name is a required field');
+      expect(sut.body.data.permalink).toBe('Permalink is a required field');
+      expect(sut.body.data.groupStageEnable).toBe(
+        'Tournament Type is a required field'
+      );
+      expect(sut.body.data.finalStageType).toBe(
+        'Final Stage Type is a required field'
+      );
+    });
+
+    test('should not create tournament because of missing required fields related to group stage when group stage enabled', async () => {
+      const {
+        groupStageGroupAdvancedSize,
+        groupStageGroupSize,
+        groupStageType,
+        ...notRequiredFields
+      } = groupEnabledTournamentForm;
+      let missingRequiredFieldsTour = {
+        ...notRequiredFields,
+      };
+
+      const sut = await request(app)
+        .post(createTournamentURL)
+        // with attach(), test run inconsistently,
+        // sometimes there are failed testcase with `read ECONNRESET` or `write ECONNABORTED` errors
+        .set('Authorization', `Bearer ${userOneToken}`)
+        .set('Connection', 'keep-alive')
+        .send(missingRequiredFieldsTour);
+
+      expect(sut.status).toBe(422);
+      expect(sut.body.name).toBe('ValidationError');
+      expect(sut.body.data.groupStageType).toBe(
+        'Group Stage Type is a required field'
+      );
+      expect(sut.body.data.groupStageGroupSize).toBe(
+        'Number of participants in each group is a required field'
+      );
+      expect(sut.body.data.groupStageGroupAdvancedSize).toBe(
+        'Number of participants advanced from each group is a required field'
+      );
+    });
+
+    test('should not create tournament because of Number of participants in each group and than Number of participants advanced from each group is not positive', async () => {
+      const { ...notRequiredFields } = groupEnabledTournamentForm;
+      let missingRequiredFieldsTour = {
+        ...notRequiredFields,
+        groupStageGroupSize: 0,
+        groupStageGroupAdvancedSize: 0,
+      };
+      const sut = await request(app)
+        .post(createTournamentURL)
+        // with attach(), test run inconsistently,
+        // sometimes there are failed testcase with `read ECONNRESET` or `write ECONNABORTED` errors
+        .set('Authorization', `Bearer ${userOneToken}`)
+        .set('Connection', 'keep-alive')
+        .send(missingRequiredFieldsTour);
+
+      expect(sut.status).toBe(422);
+      expect(sut.body.name).toBe('ValidationError');
+      expect(sut.body.data.groupStageGroupSize).toBe(
+        'Number of participants in each group must be a positive number'
+      );
+      expect(sut.body.data.groupStageGroupAdvancedSize).toBe(
+        'Number of participants advanced from each group must be a positive number'
+      );
+    });
+
+    test('should not create tournament because of Number of participants in each group exceed limited of Round Robin group stage', async () => {
+      const { ...notRequiredFields } = groupEnabledTournamentForm;
+      let missingRequiredFieldsTour = {
+        ...notRequiredFields,
+        groupStageType: StageType.RoundRobin,
+        groupStageGroupSize: 21,
+      };
+      const sut = await request(app)
+        .post(createTournamentURL)
+        // with attach(), test run inconsistently,
+        // sometimes there are failed testcase with `read ECONNRESET` or `write ECONNABORTED` errors
+        .set('Authorization', `Bearer ${userOneToken}`)
+        .set('Connection', 'keep-alive')
+        .send(missingRequiredFieldsTour);
+
+      expect(sut.status).toBe(422);
+      expect(sut.body.name).toBe('ValidationError');
+      expect(sut.body.data.groupStageGroupSize).toBe(
+        'Number of participants in each group must be less than or equal to 20'
+      );
+    });
+
+    test('should not create tournament because of Number of participants in each group exceed limited of single elimination group stage', async () => {
+      const { ...notRequiredFields } = groupEnabledTournamentForm;
+      let missingRequiredFieldsTour = {
+        ...notRequiredFields,
+        groupStageType: StageType.SingleElimination,
+        groupStageGroupSize: 257,
+      };
+      const sut = await request(app)
+        .post(createTournamentURL)
+        // with attach(), test run inconsistently,
+        // sometimes there are failed testcase with `read ECONNRESET` or `write ECONNABORTED` errors
+        .set('Authorization', `Bearer ${userOneToken}`)
+        .set('Connection', 'keep-alive')
+        .send(missingRequiredFieldsTour);
+
+      expect(sut.status).toBe(422);
+      expect(sut.body.name).toBe('ValidationError');
+      expect(sut.body.data.groupStageGroupSize).toBe(
+        'Number of participants in each group must be less than or equal to 256'
+      );
+    });
+
+    test('should not create tournament because of Number of participants in each group exceed limited of double elimination group stage', async () => {
+      const { ...notRequiredFields } = groupEnabledTournamentForm;
+      let missingRequiredFieldsTour = {
+        ...notRequiredFields,
+        groupStageType: StageType.DoubleElimination,
+        groupStageGroupSize: 257,
+      };
+      const sut = await request(app)
+        .post(createTournamentURL)
+        // with attach(), test run inconsistently,
+        // sometimes there are failed testcase with `read ECONNRESET` or `write ECONNABORTED` errors
+        .set('Authorization', `Bearer ${userOneToken}`)
+        .set('Connection', 'keep-alive')
+        .send(missingRequiredFieldsTour);
+
+      expect(sut.status).toBe(422);
+      expect(sut.body.name).toBe('ValidationError');
+      expect(sut.body.data.groupStageGroupSize).toBe(
+        'Number of participants in each group must be less than or equal to 256'
+      );
+    });
+
+    test('should not create tournament because of `Number of participants advanced from each group` not power of 2 for single elimination group stage', async () => {
+      const { ...notRequiredFields } = groupEnabledTournamentForm;
+      let missingRequiredFieldsTour = {
+        ...notRequiredFields,
+        groupStageType: StageType.SingleElimination,
+        groupStageGroupAdvancedSize: 3,
+      };
+      const sut = await request(app)
+        .post(createTournamentURL)
+        // with attach(), test run inconsistently,
+        // sometimes there are failed testcase with `read ECONNRESET` or `write ECONNABORTED` errors
+        .set('Authorization', `Bearer ${userOneToken}`)
+        .set('Connection', 'keep-alive')
+        .send(missingRequiredFieldsTour);
+
+      expect(sut.status).toBe(422);
+      expect(sut.body.name).toBe('ValidationError');
+      expect(sut.body.data.groupStageGroupAdvancedSize).toBe(
+        'Number of participants advanced from each group must be a power of 2 (1,2,4,8,16,...)'
+      );
+    });
+
+    test('should not create tournament because of `Number of participants advanced from each group` not power of 2 for double elimination group stage', async () => {
+      const { ...notRequiredFields } = groupEnabledTournamentForm;
+      let missingRequiredFieldsTour = {
+        ...notRequiredFields,
+        groupStageType: StageType.DoubleElimination,
+        groupStageGroupAdvancedSize: 3,
+      };
+      const sut = await request(app)
+        .post(createTournamentURL)
+        // with attach(), test run inconsistently,
+        // sometimes there are failed testcase with `read ECONNRESET` or `write ECONNABORTED` errors
+        .set('Authorization', `Bearer ${userOneToken}`)
+        .set('Connection', 'keep-alive')
+        .send(missingRequiredFieldsTour);
+
+      expect(sut.status).toBe(422);
+      expect(sut.body.name).toBe('ValidationError');
+      expect(sut.body.data.groupStageGroupAdvancedSize).toBe(
+        'Number of participants advanced from each group must be a power of 2 (1,2,4,8,16,...)'
+      );
+    });
+
+    test('should not create tournament because of Number of participants in each group is less than Number of participants advanced from each group', async () => {
+      const { ...notRequiredFields } = groupEnabledTournamentForm;
+      let missingRequiredFieldsTour = {
+        ...notRequiredFields,
+        groupStageGroupSize: 3,
+        groupStageGroupAdvancedSize: 4,
+      };
+      const sut = await request(app)
+        .post(createTournamentURL)
+        // with attach(), test run inconsistently,
+        // sometimes there are failed testcase with `read ECONNRESET` or `write ECONNABORTED` errors
+        .set('Authorization', `Bearer ${userOneToken}`)
+        .set('Connection', 'keep-alive')
+        .send(missingRequiredFieldsTour);
+
+      expect(sut.status).toBe(422);
+      expect(sut.body.name).toBe('ValidationError');
+      expect(sut.body.data.groupStageGroupAdvancedSize).toBe(
+        'Number of participants advanced from each group must be less than Number of participants in each group'
+      );
+    });
+
+    test('should not create tournament because of missing required final/group Stage Round Robin Type when final/group stage is round robin', async () => {
+      const {
+        groupStageRoundRobinType,
+        finalStageRoundRobinType,
+        ...notRequiredFields
+      } = groupEnabledTournamentForm;
+      let missingRequiredFieldsTour = {
+        ...notRequiredFields,
+        groupStageType: StageType.RoundRobin,
+        finalStageType: StageType.RoundRobin,
+      };
+
+      const sut = await request(app)
+        .post(createTournamentURL)
+        // with attach(), test run inconsistently,
+        // sometimes there are failed testcase with `read ECONNRESET` or `write ECONNABORTED` errors
+        .set('Authorization', `Bearer ${userOneToken}`)
+        .set('Connection', 'keep-alive')
+        .send(missingRequiredFieldsTour);
+
+      expect(sut.status).toBe(422);
+      expect(sut.body.name).toBe('ValidationError');
+      expect(sut.body.data.groupStageRoundRobinType).toBe(
+        'Participants play each other is a required field'
+      );
+      expect(sut.body.data.finalStageRoundRobinType).toBe(
+        'Participants play each other is a required field'
+      );
+    });
+
+    test('should not create tournament because of missing required Include a match for 3rd place field when final stage is single elimination', async () => {
+      const { finalStageSingleBronzeEnable, ...notRequiredFields } =
+        groupEnabledTournamentForm;
+      let missingRequiredFieldsTour = {
+        ...notRequiredFields,
+        finalStageType: StageType.SingleElimination,
+      };
+
+      const sut = await request(app)
+        .post(createTournamentURL)
+        // with attach(), test run inconsistently,
+        // sometimes there are failed testcase with `read ECONNRESET` or `write ECONNABORTED` errors
+        .set('Authorization', `Bearer ${userOneToken}`)
+        .set('Connection', 'keep-alive')
+        .send(missingRequiredFieldsTour);
+
+      expect(sut.status).toBe(422);
+      expect(sut.body.name).toBe('ValidationError');
+      expect(sut.body.data.finalStageSingleBronzeEnable).toBe(
+        'Include a match for 3rd place is a required field'
+      );
+    });
+  });
+  describe('create tournament', () => {
+    test('should create disabled group stage with Single elimination final stage tournament', async () => {
+      const name = 'World Cup 2024';
+      const permalink = 'world-cup-2024';
+      const tournamentForm = {
+        ...groupDisabledtournamentForm,
+        name,
+        permalink,
+      };
+      const sut = await request(app)
+        .post(createTournamentURL)
+        // with attach(), test run inconsistently,
+        // sometimes there are failed testcase with `read ECONNRESET` or `write ECONNABORTED` errors
+        .set('Authorization', `Bearer ${userOneToken}`)
+        .set('Connection', 'keep-alive')
+        .send(tournamentForm);
+
+      expect(sut.status).toBe(201);
+
+      // confirm that tournament has been inserted
+      const tournament = await Tournament.findById(sut.body._id);
+      expect(tournament).not.toBeNull();
+      expect(tournament!.nameDisplay).toBe(name.trim());
+      expect(tournament!.permalink).toBe(permalink.toLowerCase());
+      expect(tournament!.groupStageEnable).toBe(false);
+      expect(tournament!.groupStageType).toBeNull();
+      expect(tournament!.groupStageGroupSize).toBeNull();
+      expect(tournament!.groupStageGroupAdvancedSize).toBeNull();
+      expect(tournament!.groupStageRoundRobinType).toBeNull();
+      expect(tournament!.finalStageType).toBe(StageType.SingleElimination);
+      expect(tournament!.finalStageRoundRobinType).toBeNull();
+      expect(tournament!.finalStageSingleBronzeEnable).toBe(false);
+    });
+
+    test('should create disabled group stage with Single elimination final stage tournament', async () => {
+      const name = 'World Cup 2024';
+      const permalink = 'world-cup-2024';
+      const finalStageSingleBronzeEnable = true;
+      const tournamentForm = {
+        ...groupDisabledtournamentForm,
+        name,
+        permalink,
+        finalStageSingleBronzeEnable,
+      };
+      const sut = await request(app)
+        .post(createTournamentURL)
+        // with attach(), test run inconsistently,
+        // sometimes there are failed testcase with `read ECONNRESET` or `write ECONNABORTED` errors
+        .set('Authorization', `Bearer ${userOneToken}`)
+        .set('Connection', 'keep-alive')
+        .send(tournamentForm);
+
+      expect(sut.status).toBe(201);
+
+      // confirm that tournament has been inserted
+      const tournament = await Tournament.findById(sut.body._id);
+      expect(tournament).not.toBeNull();
+      expect(tournament!.nameDisplay).toBe(name.trim());
+      expect(tournament!.permalink).toBe(permalink.toLowerCase());
+      expect(tournament!.groupStageEnable).toBe(false);
+      expect(tournament!.groupStageType).toBeNull();
+      expect(tournament!.groupStageGroupSize).toBeNull();
+      expect(tournament!.groupStageGroupAdvancedSize).toBeNull();
+      expect(tournament!.groupStageRoundRobinType).toBeNull();
+      expect(tournament!.finalStageType).toBe(StageType.SingleElimination);
+      expect(tournament!.finalStageRoundRobinType).toBeNull();
+      expect(tournament!.finalStageSingleBronzeEnable).toBe(
+        finalStageSingleBronzeEnable
+      );
+    });
+
+    Object.keys(RoundRobinType)
+      .filter(k => !isNaN(Number(k))) // get only number typed keys from enum
+      .forEach(rrType => {
+        test(`should create disabled group stage with Round Robin [${rrType}] final stage tournament`, async () => {
+          const name = 'World Cup 2024';
+          const permalink = 'world-cup-2024';
+          const finalStageType = StageType.RoundRobin;
+          const finalStageRoundRobinType = Number(rrType);
+          const tournamentForm = {
+            ...groupDisabledtournamentForm,
+            name,
+            permalink,
+            finalStageType,
+            finalStageRoundRobinType,
+          };
+          const sut = await request(app)
+            .post(createTournamentURL)
+            // with attach(), test run inconsistently,
+            // sometimes there are failed testcase with `read ECONNRESET` or `write ECONNABORTED` errors
+            .set('Authorization', `Bearer ${userOneToken}`)
+            .set('Connection', 'keep-alive')
+            .send(tournamentForm);
+
+          expect(sut.status).toBe(201);
+
+          // confirm that tournament has been inserted
+          const tournament = await Tournament.findById(sut.body._id);
+          expect(tournament).not.toBeNull();
+          expect(tournament!.nameDisplay).toBe(name.trim());
+          expect(tournament!.permalink).toBe(permalink.toLowerCase());
+          expect(tournament!.groupStageEnable).toBe(false);
+          expect(tournament!.groupStageType).toBeNull();
+          expect(tournament!.groupStageGroupSize).toBeNull();
+          expect(tournament!.groupStageGroupAdvancedSize).toBeNull();
+          expect(tournament!.groupStageRoundRobinType).toBeNull();
+          expect(tournament!.finalStageType).toBe(finalStageType);
+          expect(tournament!.finalStageRoundRobinType).toBe(
+            finalStageRoundRobinType
+          );
+          expect(tournament!.finalStageSingleBronzeEnable).toBeNull();
+        });
+      });
+
+    test('should create disabled group stage with Double elimination final stage tournament', async () => {
+      const name = 'World Cup 2024';
+      const permalink = 'world-cup-2024';
+      const finalStageType = StageType.DoubleElimination;
+      const finalStageSingleBronzeEnable = true;
+      const tournamentForm = {
+        ...groupDisabledtournamentForm,
+        name,
+        permalink,
+        finalStageType,
+        finalStageSingleBronzeEnable,
+      };
+      const sut = await request(app)
+        .post(createTournamentURL)
+        // with attach(), test run inconsistently,
+        // sometimes there are failed testcase with `read ECONNRESET` or `write ECONNABORTED` errors
+        .set('Authorization', `Bearer ${userOneToken}`)
+        .set('Connection', 'keep-alive')
+        .send(tournamentForm);
+
+      expect(sut.status).toBe(201);
+
+      // confirm that tournament has been inserted
+      const tournament = await Tournament.findById(sut.body._id);
+      expect(tournament).not.toBeNull();
+      expect(tournament!.nameDisplay).toBe(name.trim());
+      expect(tournament!.permalink).toBe(permalink.toLowerCase());
+      expect(tournament!.groupStageEnable).toBe(false);
+      expect(tournament!.groupStageType).toBeNull();
+      expect(tournament!.groupStageGroupSize).toBeNull();
+      expect(tournament!.groupStageGroupAdvancedSize).toBeNull();
+      expect(tournament!.groupStageRoundRobinType).toBeNull();
+      expect(tournament!.finalStageType).toBe(finalStageType);
+      expect(tournament!.finalStageRoundRobinType).toBeNull();
+      expect(tournament!.finalStageSingleBronzeEnable).toBeNull();
+    });
+
+    test('should create enable group stage tournament', async () => {
+      const name = 'World Cup 2024';
+      const permalink = 'world-cup-2024';
+      const tournamentForm = {
+        ...groupEnabledTournamentForm,
+        name,
+        permalink,
+      };
+      const sut = await request(app)
+        .post(createTournamentURL)
+        // with attach(), test run inconsistently,
+        // sometimes there are failed testcase with `read ECONNRESET` or `write ECONNABORTED` errors
+        .set('Authorization', `Bearer ${userOneToken}`)
+        .set('Connection', 'keep-alive')
+        .send(tournamentForm);
+
+      expect(sut.status).toBe(201);
+
+      // confirm that tournament has been inserted
+      const tournament = await Tournament.findById(sut.body._id);
+      expect(tournament).not.toBeNull();
+      expect(tournament!.nameDisplay).toBe(name.trim());
+      expect(tournament!.permalink).toBe(permalink.toLowerCase());
+      expect(tournament!.groupStageEnable).toBe(true);
+      expect(tournament!.groupStageType).toBe(StageType.RoundRobin);
+      expect(tournament!.groupStageGroupSize).toBe(4);
+      expect(tournament!.groupStageGroupAdvancedSize).toBe(2);
+      expect(tournament!.groupStageRoundRobinType).toBe(1);
+      expect(tournament!.finalStageType).toBe(StageType.SingleElimination);
+      expect(tournament!.finalStageRoundRobinType).toBeNull();
+      expect(tournament!.finalStageSingleBronzeEnable).toBe(false);
+    });
+  });
+});
