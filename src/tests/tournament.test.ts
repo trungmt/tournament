@@ -688,4 +688,44 @@ describe(`detail tournament - GET ${detailTournamentURL}`, () => {
 
     expect(sut.status).toBe(404);
   });
+
+  describe(`delete tournament - DELETE ${deleteTournamentURL}`, () => {
+    let _idString: string;
+    beforeEach(() => {
+      const _id = initTournament._id as ObjectID;
+      _idString = _id.toHexString();
+    });
+    test(`Should delete tournament`, async () => {
+      const url = deleteTournamentURL.replace(':id', _idString);
+      const sut = await request(app)
+        .delete(url)
+        .set('Authorization', `Bearer ${userOneToken}`)
+        .set('Connection', 'keep-alive')
+        .send();
+      expect(sut.status).toBe(200);
+      expect(sut.body._id).toBe(_idString);
+    });
+
+    test(`Should response not found error if delete tournament that doesnt exist in db`, async () => {
+      const _idString = 'wrongid'; // ObjectID from past
+      const url = deleteTournamentURL.replace(':id', _idString);
+      const sut = await request(app)
+        .delete(url)
+        .set('Authorization', `Bearer ${userOneToken}`)
+        .set('Connection', 'keep-alive')
+        .send();
+
+      expect(sut.status).toBe(404);
+    });
+
+    test('Should not delete tournament for unauthorized user', async () => {
+      const url = deleteTournamentURL.replace(':id', _idString);
+      const sut = await request(app)
+        .delete(url)
+        .set('Connection', 'keep-alive')
+        .send();
+
+      expect(sut.status).toBe(401);
+    });
+  });
 });
