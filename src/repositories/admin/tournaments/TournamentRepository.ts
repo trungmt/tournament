@@ -47,9 +47,13 @@ export default class TournamentRepository
 
     return await this.getListWithPagination(filter, sort, limit, page);
   }
-  getTournamentById(
-    id: string
+  async getTournamentById(
+    _id: string
   ): Promise<RepositoryResultType<ITournamentDoc> | null> {
-    throw new Error('Method not implemented.');
+    const isValidId = ObjectID.isValid(_id);
+    if (isValidId === false) {
+      return null;
+    }
+    return await this.model.findById(_id);
   }
 }
