@@ -16,14 +16,14 @@ import { RoundRobinType, StageType } from '../types/global';
 
 let userOneToken: string;
 let userTwoToken: string;
-let tournament: ITournamentDoc & Document<any, any, ITournamentDoc>;
+let initTournament: ITournamentDoc & Document<any, any, ITournamentDoc>;
 
 beforeEach(async () => {
   const initUserDBResult = await setupUserDatabase();
   const initTournamentDBResult = await setupTournamentDatabase();
   userOneToken = initUserDBResult.userOneToken;
   userTwoToken = initUserDBResult.userTwoToken;
-  tournament = initTournamentDBResult.tournament;
+  initTournament = initTournamentDBResult.tournament;
 });
 
 const basicAPIURL = '/api/v1';
@@ -32,6 +32,7 @@ const createTournamentURL = `${adminAPIURL}/tournaments`;
 const updateTournamentURL = `${adminAPIURL}/tournaments/:id`;
 const deleteTournamentURL = `${adminAPIURL}/tournaments/:id`;
 const listTournamentURL = `${adminAPIURL}/tournaments`;
+const detailTournamentURL = `${adminAPIURL}/tournaments/:id`;
 
 describe(`create tournament - POST ${createTournamentURL}`, () => {
   describe('validation test', () => {
@@ -505,7 +506,7 @@ describe(`create tournament - POST ${createTournamentURL}`, () => {
   });
 });
 
-describe(`GET ${listTournamentURL}`, () => {
+describe(`list tournament - GET ${listTournamentURL}`, () => {
   let tournamentList: ITournamentDoc[];
   let defaultPaginLimit = parseInt(process.env.PAGINATION_DEFAULT_LIMIT!);
   let defaultPaginPage = parseInt(process.env.PAGINATION_DEFAULT_PAGE!);
@@ -629,5 +630,51 @@ describe(`GET ${listTournamentURL}`, () => {
     expect(response.body.lastPage).toBe(4);
     expect(response.body.previous).toBeNull();
     expect(response.body.next).toBeNull();
+  });
+});
+
+describe(`detail tournament - GET ${detailTournamentURL}`, () => {
+  let _idString: string;
+  beforeEach(() => {
+    const _id = initTournament._id as ObjectID;
+    _idString = _id.toHexString();
+  });
+
+  test('should not create tournament for unauthorized user', async () => {
+    const url = detailTournamentURL.replace(':id', _idString);
+    const sut = await request(app)
+      .get(url)
+      .set('Connection', 'keep-alive')
+      .send();
+
+    expect(sut.status).toBe(401);
+  });
+
+  test(`Should display tournament detail`, async () => {
+    const url = detailTournamentURL.replace(':id', _idString);
+    const sut = await request(app)
+      .get(url)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .send();
+
+    expect(sut.status).toBe(200);
+    const resultTournaments = sut.body as ITournamentDoc;
+
+    expect(resultTournaments).not.toBeNull();
+    expect(resultTournaments!.name).toBe(initTournament.nameDisplay!.trim());
+    expect(resultTournaments!.permalink).toBe(initTournament.permalink);
+    expect(resultTournaments!.groupStageEnable).toBe(
+      initTournament.groupStageEnable
+    );
+    expect(resultTournaments!.groupStageType).toBeNull();
+    expect(resultTournaments!.groupStageGroupSize).toBeNull();
+    expect(resultTournaments!.groupStageGroupAdvancedSize).toBeNull();
+    expect(resultTournaments!.groupStageRoundRobinType).toBeNull();
+    expect(resultTournaments!.finalStageType).toBe(
+      initTournament.finalStageType
+    );
+    expect(resultTournaments!.finalStageRoundRobinType).toBeNull();
+    expect(resultTournaments!.finalStageSingleBronzeEnable).toBe(false);
   });
 });
