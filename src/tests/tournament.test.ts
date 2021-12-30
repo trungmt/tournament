@@ -6,6 +6,7 @@ import {
   setupTournamentDatabase,
   groupEnabledTournamentForm,
   groupDisabledtournamentForm,
+  setupTournamentListDatabase,
 } from './fixtures/db';
 import Tournament from '../models/tournament';
 import { ObjectID } from 'mongodb';
@@ -501,5 +502,132 @@ describe(`create tournament - POST ${createTournamentURL}`, () => {
       expect(tournament!.finalStageRoundRobinType).toBeNull();
       expect(tournament!.finalStageSingleBronzeEnable).toBe(false);
     });
+  });
+});
+
+describe(`GET ${listTournamentURL}`, () => {
+  let tournamentList: ITournamentDoc[];
+  let defaultPaginLimit = parseInt(process.env.PAGINATION_DEFAULT_LIMIT!);
+  let defaultPaginPage = parseInt(process.env.PAGINATION_DEFAULT_PAGE!);
+  beforeEach(async () => {
+    const initTournamentListDBResult = await setupTournamentListDatabase();
+    tournamentList = initTournamentListDBResult;
+  });
+  test(`Should list first page tournaments in default url`, async () => {
+    const expectTournamentList = tournamentList
+      .slice(tournamentList.length - defaultPaginLimit)
+      .reverse();
+    const response = await request(app)
+      .get(listTournamentURL)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .send()
+      .expect(200);
+
+    const resultTournaments = response.body.results as ITournamentDoc[];
+
+    expect(resultTournaments.length).toBe(defaultPaginLimit);
+    expect(resultTournaments).toEqual(
+      JSON.parse(JSON.stringify(expectTournamentList))
+    );
+    expect(response.body.current).toBe(defaultPaginPage);
+    expect(response.body.limit).toBe(defaultPaginLimit);
+    expect(response.body.lastPage).toBe(4);
+    expect(response.body.previous).toBeNull();
+    expect(response.body.next).toBe(2);
+  });
+
+  test(`Should list first page tournaments if no limit and page specified`, async () => {
+    const expectTournamentList = tournamentList
+      .slice(tournamentList.length - defaultPaginLimit)
+      .reverse();
+    const response = await request(app)
+      .get(`${listTournamentURL}?limit=&page=`)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .send()
+      .expect(200);
+
+    const resultTournaments = response.body.results as ITournamentDoc[];
+
+    expect(resultTournaments.length).toBe(defaultPaginLimit);
+    expect(resultTournaments).toEqual(
+      JSON.parse(JSON.stringify(expectTournamentList))
+    );
+    expect(response.body.current).toBe(defaultPaginPage);
+    expect(response.body.limit).toBe(defaultPaginLimit);
+    expect(response.body.lastPage).toBe(4);
+    expect(response.body.previous).toBeNull();
+    expect(response.body.next).toBe(2);
+  });
+
+  test(`Should list tournaments with previous and next page`, async () => {
+    const limit = 2,
+      page = 3;
+    const response = await request(app)
+      .get(`${listTournamentURL}?limit=${limit}&page=${page}`)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .send()
+      .expect(200);
+
+    const expectTournamentList = tournamentList
+      .slice(tournamentList.length - 6, tournamentList.length - 4)
+      .reverse();
+    const resultTournaments = response.body.results as ITournamentDoc[];
+
+    expect(resultTournaments.length).toBe(limit);
+    expect(resultTournaments).toEqual(
+      JSON.parse(JSON.stringify(expectTournamentList))
+    );
+    expect(response.body.current).toBe(page);
+    expect(response.body.limit).toBe(limit);
+    expect(response.body.lastPage).toBe(16);
+    expect(response.body.previous).toBe(page - 1);
+    expect(response.body.next).toBe(page + 1);
+  });
+
+  test(`Should list last page`, async () => {
+    const page = 4;
+    const response = await request(app)
+      .get(`${listTournamentURL}?limit=&page=${page}`)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .send()
+      .expect(200);
+
+    const expectTournamentList = tournamentList.slice(0, 2).reverse();
+    const resultTournaments = response.body.results as ITournamentDoc[];
+    expect(resultTournaments.length).toBe(2);
+    expect(resultTournaments).toEqual(
+      JSON.parse(JSON.stringify(expectTournamentList))
+    );
+    expect(response.body.current).toBe(page);
+    expect(response.body.limit).toBe(defaultPaginLimit);
+    expect(response.body.lastPage).toBe(4);
+    expect(response.body.previous).toBe(page - 1);
+    expect(response.body.next).toBeNull();
+  });
+
+  test(`Should list nothing because out of page range`, async () => {
+    const page = 10;
+    const response = await request(app)
+      .get(`${listTournamentURL}?limit=&page=${page}`)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .send()
+      .expect(200);
+
+    const expectTournamentList = [] as ITournamentDoc[];
+    const resultTournaments = response.body.results as ITournamentDoc[];
+    expect(resultTournaments.length).toBe(0);
+    expect(resultTournaments).toEqual(
+      JSON.parse(JSON.stringify(expectTournamentList))
+    );
+    expect(response.body.current).toBeNull();
+    expect(response.body.limit).toBe(defaultPaginLimit);
+    expect(response.body.lastPage).toBe(4);
+    expect(response.body.previous).toBeNull();
+    expect(response.body.next).toBeNull();
   });
 });
