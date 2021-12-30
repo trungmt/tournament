@@ -111,10 +111,10 @@ const duplicateNameValidation: TestFunction<
 };
 
 const numberOnlyPowerOf2Validation: TestFunction<
-  number | undefined,
+  number | undefined | null,
   Record<string, any>
 > = async function (this, value) {
-  if (typeof value === 'undefined') {
+  if (typeof value === 'undefined' || value === null) {
     return true;
   }
   return Math.log2(value) % 1 === 0;
@@ -146,12 +146,12 @@ export const tournamentFieldValidationSchema = (
         ),
       permalink: string()
         .required()
+        .label('Permalink')
         .matches(
           /^([a-zA-Z0-9]+-)*[a-zA-Z0-9]+$/,
           '${label} only accepts alphanumeric connected by dash'
         )
         .lowercase()
-        .label('Permalink')
         .test(
           'duplicatePermalinkValidation',
           '${label} value is already existed',
@@ -159,7 +159,7 @@ export const tournamentFieldValidationSchema = (
         ),
       groupStageEnable: boolean().required().label('Tournament Type'),
       groupStageType: mixed<StageType | null>()
-        .default(StageType.RoundRobin)
+        .default(null)
         .label('Group Stage Type')
         .when('groupStageEnable', {
           is: (groupStageEnableVal: boolean) => groupStageEnableVal === true,
@@ -173,90 +173,97 @@ export const tournamentFieldValidationSchema = (
           otherwise: mixed<StageType>()
             .nullable()
             .default(null)
-            .transform(function (current, original) {
-              return null;
-            }),
+            .transform(() => null),
         }),
       groupStageGroupSize: number()
-        .default(4) //TODO: define constants
+        .default(null) //TODO: define constants
         .label('Number of participants in each group')
-        .when(['groupStageEnable', 'groupStageType'], {
-          is: (groupStageEnableVal: boolean, groupStageTypeVal: StageType) =>
-            groupStageEnableVal === true &&
-            isStageTypeRoundRobin(groupStageTypeVal),
-          then: number().required().positive().max(20), //TODO: define constants
-        })
-        .when(['groupStageEnable', 'groupStageType'], {
-          is: (groupStageEnableVal: boolean, groupStageTypeVal: StageType) =>
-            groupStageEnableVal === true &&
-            (isStageTypeSingle(groupStageTypeVal) ||
-              isStageTypeDouble(groupStageTypeVal)),
-          then: number().required().positive().max(256),
-          //TODO: define constants
+        .when('groupStageEnable', {
+          is: (groupStageEnableVal: boolean) => groupStageEnableVal === true,
+          then: number()
+            .required()
+            .positive()
+            .when('groupStageType', {
+              is: (groupStageTypeVal: StageType) =>
+                isStageTypeRoundRobin(groupStageTypeVal),
+              then: number().nullable().max(20),
+              otherwise: number().when('groupStageType', {
+                // upper when
+                is: (groupStageTypeVal: StageType) =>
+                  isStageTypeSingle(groupStageTypeVal) ||
+                  isStageTypeDouble(groupStageTypeVal),
+                then: number().nullable().max(256), // if use only then: can set nullable() in upper when
+                otherwise: number().nullable(), // if use both then: and otherwise: should set nullable() both
+              }),
+            }),
+          otherwise: number()
+            .nullable()
+            .default(null)
+            .transform(() => null), //TODO: define constants
         }),
       groupStageGroupAdvancedSize: number()
-        .default(2) //TODO: define constants
-        .label('Number of participants advance from each group')
-        .when(['groupStageEnable', 'groupStageType'], {
-          is: (groupStageEnableVal: boolean, groupStageTypeVal: StageType) =>
-            groupStageEnableVal === true &&
-            isStageTypeRoundRobin(groupStageTypeVal),
+        .default(null) //TODO: define constants
+        .label('Number of participants advanced from each group')
+        .when('groupStageEnable', {
+          is: (groupStageEnableVal: boolean) => groupStageEnableVal === true,
           then: number()
             .required()
             .positive()
-            .lessThan(ref('groupStageGroupSize')), //TODO: define constants
-        })
-        .when(['groupStageEnable', 'groupStageType'], {
-          is: (groupStageEnableVal: boolean, groupStageTypeVal: StageType) =>
-            groupStageEnableVal === true &&
-            (isStageTypeSingle(groupStageTypeVal) ||
-              isStageTypeDouble(groupStageTypeVal)),
-          then: number()
-            .required()
-            .positive()
-            .lessThan(ref('groupStageGroupSize'))
-            .test(
-              'numberOnlyPowerOf2Validation',
-              '${label} must be a power of 2 (1,2,4,8,16,...)',
-              numberOnlyPowerOf2Validation
-            ),
-          //TODO: define constants
+            .lessThan(
+              ref('groupStageGroupSize'),
+              '${label} must be less than Number of participants in each group'
+            )
+            .when('groupStageType', {
+              is: (groupStageTypeVal: StageType) =>
+                isStageTypeSingle(groupStageTypeVal) ||
+                isStageTypeDouble(groupStageTypeVal),
+              then: number()
+                .nullable()
+                .test(
+                  'numberOnlyPowerOf2Validation',
+                  '${label} must be a power of 2 (1,2,4,8,16,...)',
+                  numberOnlyPowerOf2Validation
+                ),
+              otherwise: number().nullable(),
+            }),
+          otherwise: number()
+            .nullable()
+            .transform(() => null), //TODO: define constants
         }),
       groupStageRoundRobinType: mixed<RoundRobinType | null>()
-        .default(RoundRobinType.Once)
+        .default(null)
         .label('Participants play each other')
         .when(['groupStageEnable', 'groupStageType'], {
           is: (groupStageEnableVal: boolean, groupStageTypeVal: StageType) =>
             groupStageEnableVal === true &&
             isStageTypeRoundRobin(groupStageTypeVal),
           then: mixed<RoundRobinType>().required(),
-          otherwise: mixed<RoundRobinType>().default(null),
+          otherwise: mixed<RoundRobinType>()
+            .nullable()
+            .transform(() => null),
         }),
-      finalStageType: mixed<StageType>()
-        .default(StageType.SingleElimination)
-        .required()
-        .label('Final Stage Type'),
-      finalStageRoundRobinType: mixed<RoundRobinType>()
-        .default(RoundRobinType.Once)
+      finalStageType: mixed<StageType>().required().label('Final Stage Type'),
+      finalStageRoundRobinType: mixed<RoundRobinType | null>()
+        .default(null)
         .label('Participants play each other')
         .when('finalStageType', {
           is: (finalStageTypeVal: StageType) =>
             isStageTypeRoundRobin(finalStageTypeVal),
-          then: mixed<RoundRobinType>().required(),
-          otherwise: mixed<RoundRobinType>().default(null),
+          then: mixed<RoundRobinType>().nullable().required(),
+          otherwise: mixed<RoundRobinType>()
+            .nullable()
+            .transform(() => null),
         }),
       finalStageSingleBronzeEnable: boolean()
-        .default(false)
+        .default(null)
         .label('Include a match for 3rd place')
         .when('finalStageType', {
           is: (finalStageTypeVal: StageType) =>
             isStageTypeSingle(finalStageTypeVal),
-          then: boolean().required(),
+          then: boolean().nullable().required(),
           otherwise: boolean()
-            .default(null)
-            .transform(function (value) {
-              return null;
-            }),
+            .nullable()
+            .transform(() => null),
         }),
     }),
   });
