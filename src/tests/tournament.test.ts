@@ -677,4 +677,15 @@ describe(`detail tournament - GET ${detailTournamentURL}`, () => {
     expect(resultTournaments!.finalStageRoundRobinType).toBeNull();
     expect(resultTournaments!.finalStageSingleBronzeEnable).toBe(false);
   });
+
+  test(`Should not display not found tournament detail`, async () => {
+    const url = detailTournamentURL.replace(':id', 'wrongid');
+    const sut = await request(app)
+      .get(url)
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .set('Connection', 'keep-alive')
+      .send();
+
+    expect(sut.status).toBe(404);
+  });
 });
