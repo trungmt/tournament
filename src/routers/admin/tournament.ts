@@ -4,9 +4,10 @@ import TournamentController from '../../controllers/admin/tournaments';
 import TournamentRepository from '../../repositories/admin/tournaments/TournamentRepository';
 import { validationAsync } from '../../middlewares/validation';
 import { tournamentFieldValidationSchema } from '../../validations/tournamentValidationSchema';
+import constants from '../../configs/constants';
 
 const tournamentsRouter = express.Router();
-const entityName = process.env.ENTITY_TOURNAMENTS!;
+const entityName = constants.ENTITY_TOURNAMENTS;
 
 const service = new TournamentRepository();
 const Tournament = new TournamentController(entityName, service);

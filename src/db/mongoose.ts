@@ -1,4 +1,4 @@
 import mongoose from 'mongoose';
-import { MONGOOSE_CONNECTION_URL } from '../services/secret';
+import configs from '../configs';
 
-mongoose.connect(MONGOOSE_CONNECTION_URL!, {});
+mongoose.connect(configs.mongooseConnectionURL!, {});

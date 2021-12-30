@@ -9,6 +9,9 @@ import {
   verifyFileExtension,
 } from '../services/FileService';
 
+import configs from '../configs';
+import constants from '../configs/constants';
+
 const flagIconFileUploadValidation: TestFunction<
   Express.Multer.File | undefined,
   Record<string, any>
@@ -27,7 +30,7 @@ const flagIconFileUploadValidation: TestFunction<
         typeof fileType === 'undefined' ||
         !verifyFileExtension(
           fileType.ext,
-          process.env.ACCEPT_IMAGE_EXTENSION_PATTERN!
+          constants.ACCEPT_IMAGE_EXTENSION_PATTERN
         )
       ) {
         errorMessage =
@@ -62,11 +65,7 @@ const flagIconFilePathValidation: TestFunction<string | undefined> =
     if (typeof value === 'undefined' || value === '') {
       return true;
     }
-    const tempFilePath = path.join(
-      process.env.UPLOAD_TEMP_FILE_DIR!,
-      'teams',
-      value
-    );
+    const tempFilePath = path.join(configs.uploadTempFileDir, 'teams', value);
 
     try {
       await access(tempFilePath);

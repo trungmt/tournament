@@ -9,6 +9,7 @@ import {
 import { removeOldTempFiles } from '../services/FileService';
 import Team from '../models/team';
 import { ObjectID } from 'mongodb';
+import constants from '../configs/constants';
 
 // TODO: add locale files to store constants related to validation messages
 
@@ -321,8 +322,8 @@ describe(`DELETE ${deleteTeamURL}`, () => {
 
 describe(`GET ${listTeamURL}`, () => {
   let teamList: ITeamDoc[];
-  let defaultPaginLimit = parseInt(process.env.PAGINATION_DEFAULT_LIMIT!);
-  let defaultPaginPage = parseInt(process.env.PAGINATION_DEFAULT_PAGE!);
+  let defaultPaginLimit = constants.PAGINATION_DEFAULT_LIMIT;
+  let defaultPaginPage = constants.PAGINATION_DEFAULT_PAGE;
   console.log('defaultPaginLimit', defaultPaginLimit);
   beforeEach(async () => {
     const initTeamListDBResult = await setupTeamListDatabase();

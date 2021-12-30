@@ -11,6 +11,7 @@ import {
 import Tournament from '../models/tournament';
 import { ObjectID } from 'mongodb';
 import { RoundRobinType, StageType } from '../types/global';
+import constants from '../configs/constants';
 
 // TODO: add locale files to store constants related to validation messages
 
@@ -508,8 +509,8 @@ describe(`create tournament - POST ${createTournamentURL}`, () => {
 
 describe(`list tournament - GET ${listTournamentURL}`, () => {
   let tournamentList: ITournamentDoc[];
-  let defaultPaginLimit = parseInt(process.env.PAGINATION_DEFAULT_LIMIT!);
-  let defaultPaginPage = parseInt(process.env.PAGINATION_DEFAULT_PAGE!);
+  let defaultPaginLimit = constants.PAGINATION_DEFAULT_LIMIT;
+  let defaultPaginPage = constants.PAGINATION_DEFAULT_PAGE;
   beforeEach(async () => {
     const initTournamentListDBResult = await setupTournamentListDatabase();
     tournamentList = initTournamentListDBResult;

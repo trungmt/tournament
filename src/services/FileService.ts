@@ -3,6 +3,7 @@ import { readdir, stat, unlink, mkdir, rename, copyFile } from 'fs/promises';
 import FileType, { FileTypeResult } from 'file-type';
 import sharp from 'sharp';
 import BaseError from '../exceptions/BaseError';
+import configs from '../configs';
 
 /**
  * Resize image from file stored on disk
@@ -67,8 +68,8 @@ export const verifyFileExtension = (
 
 export const removeOldTempFiles = async (
   removeTimeMs: number,
-  ignoreFileNames: string[] = process.env.OLD_TEMP_FILE_IGNORE_LIST!.split(','),
-  dirname: string = process.env.UPLOAD_TEMP_FILE_DIR!
+  ignoreFileNames: string[] = configs.oldTempFileIgnoreList.split(','),
+  dirname: string = configs.uploadTempFileDir
 ): Promise<boolean> => {
   let result = false;
   try {
@@ -134,11 +135,11 @@ export const moveUploadFile = async (
   isDeleteTemp: boolean = true
 ): Promise<string> => {
   const tempFilePath = path.join(
-    process.env.UPLOAD_TEMP_FILE_DIR!,
+    configs.uploadTempFileDir,
     entityName,
     fileName
   );
-  const targetDirectory = path.join(process.env.UPLOAD_FILE_DIR!, entityName);
+  const targetDirectory = path.join(configs.uploadFileDir, entityName);
   const targetFilePath = path.join(targetDirectory, fileName);
 
   try {
@@ -171,11 +172,7 @@ export const removeUploadFile = async (
   if (!fileName) {
     return;
   }
-  const targetFilePath = path.join(
-    process.env.UPLOAD_FILE_DIR!,
-    entityName,
-    fileName
-  );
+  const targetFilePath = path.join(configs.uploadFileDir, entityName, fileName);
   try {
     // if `filepath` is file, get status of file for file's modification time
     const stats = await stat(targetFilePath);

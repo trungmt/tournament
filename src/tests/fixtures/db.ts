@@ -3,6 +3,7 @@ import Team from '../../models/team';
 import Tournament from '../../models/tournament';
 import { moveUploadFile } from '../../services/FileService';
 import { RoundRobinType, StageType } from '../../types/global';
+import constants from '../../configs/constants';
 
 export const userOne: IUser = {
   username: 'trungtm',
@@ -36,10 +37,10 @@ export const setupTeamDatabase = async () => {
   await Team.deleteMany();
 
   const fileName = 'england.jpg';
-  const flagIconWidth = parseInt(process.env.DEFAULT_IMAGE_WIDTH!);
+  const flagIconWidth = constants.DEFAULT_IMAGE_WIDTH;
   try {
     const targetFilePath = await moveUploadFile(
-      process.env.ENTITY_TEAMS!,
+      constants.ENTITY_TEAMS,
       fileName,
       flagIconWidth,
       false
@@ -65,10 +66,10 @@ export const setupTeamListDatabase = async () => {
   await Team.deleteMany();
 
   const fileName = 'england.jpg';
-  const flagIconWidth = parseInt(process.env.DEFAULT_IMAGE_WIDTH!);
+  const flagIconWidth = constants.DEFAULT_IMAGE_WIDTH;
   try {
     const targetFilePath = await moveUploadFile(
-      process.env.ENTITY_TEAMS!,
+      constants.ENTITY_TEAMS,
       fileName,
       flagIconWidth,
       false

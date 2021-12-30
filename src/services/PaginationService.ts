@@ -1,3 +1,4 @@
+import constants from '../configs/constants';
 export interface PaginationResult<T = any> {
   results: T[];
   count: number;
@@ -46,11 +47,11 @@ export default class PaginationService {
     const limit: number =
       !!inputLimit && +inputLimit > 0
         ? +inputLimit
-        : parseInt(process.env.PAGINATION_DEFAULT_LIMIT!);
+        : constants.PAGINATION_DEFAULT_LIMIT;
     const page: number =
       !!inputPage && +inputPage > 0
         ? +inputPage
-        : parseInt(process.env.PAGINATION_DEFAULT_PAGE!);
+        : constants.PAGINATION_DEFAULT_PAGE;
 
     // if (typeof inputLimit === 'string' && parseInt(inputLimit) > 0) {
     //   limit = parseInt(inputLimit);

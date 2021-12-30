@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import BaseError from '../exceptions/BaseError';
+import configs from '../configs';
 
 export const logException = (
   error: Error,
@@ -9,8 +10,7 @@ export const logException = (
 ) => {
   if (
     process.env.NODE_ENV === 'development' ||
-    (process.env.NODE_ENV === 'testing' &&
-      process.env.ENABLE_LOGGING === 'true')
+    (process.env.NODE_ENV === 'testing' && configs.enableLogin === true)
   ) {
     console.log('error', error);
   }

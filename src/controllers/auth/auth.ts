@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 import User from '../../models/user';
+import configs from '../../configs';
+import constants from '../../configs/constants';
 
 export const login = async (req: Request, res: Response) => {
   const { username, password } = req.body;
@@ -26,8 +28,8 @@ export const register = async (req: Request, res: Response) => {
   const user = new User(userFormData);
 
   //TODO: function to prepare env const
-  const avatarWidth = parseInt(process.env.DEFAULT_IMAGE_WIDTH!);
-  const avatarHeight = parseInt(process.env.DEFAULT_IMAGE_HEIGHT!);
+  const avatarWidth = constants.DEFAULT_IMAGE_WIDTH;
+  const avatarHeight = constants.DEFAULT_IMAGE_HEIGHT;
 
   try {
     if (avatar) {
@@ -84,7 +86,7 @@ export const refresh = async (req: Request, res: Response) => {
 
 const generateRefreshCookie = (refreshToken: string, response: Response) => {
   return response.cookie('refreshToken', refreshToken, {
-    maxAge: 1000 * 60 * 60 * 24 * parseInt(process.env.REFRESH_TOKEN_EXPIRY!),
+    maxAge: 1000 * 60 * 60 * 24 * configs.refreshTokenExpirtyNumber,
     domain: 'localhost',
     path: '/',
     httpOnly: true,
