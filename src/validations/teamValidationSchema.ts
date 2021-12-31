@@ -1,4 +1,5 @@
 import path from 'path';
+import { format } from 'util';
 import { access } from 'fs/promises';
 import { Document, FilterQuery } from 'mongoose';
 import { object, string, mixed, TestFunction, SchemaOf } from 'yup';
@@ -11,6 +12,7 @@ import {
 
 import configs from '../configs';
 import constants from '../configs/constants';
+import validationLocaleEn from '../configs/locale/validation.en';
 
 const flagIconFileUploadValidation: TestFunction<
   Express.Multer.File | undefined,
@@ -22,19 +24,21 @@ const flagIconFileUploadValidation: TestFunction<
 
   let errorMessage = '';
   if (flagIcon.size === 0) {
-    errorMessage = '${label} file is empty.';
+    errorMessage = format(
+      validationLocaleEn.validationMessage.emptyUploadFile,
+      '${label}'
+    );
   } else {
     try {
       const fileType = await getFileTypeFromDisk(flagIcon.path);
       if (
         typeof fileType === 'undefined' ||
-        !verifyFileExtension(
-          fileType.ext,
-          constants.ACCEPT_IMAGE_EXTENSION_PATTERN
-        )
+        !verifyFileExtension(fileType.ext, constants.ACCEPT_IMAGE_EXTENSION)
       ) {
-        errorMessage =
-          'File type not allowed. Please upload image with these types: jpg, jpeg, png, gif, tiff';
+        errorMessage = format(
+          validationLocaleEn.validationMessage.notAllowFileType,
+          constants.ACCEPT_IMAGE_EXTENSION.join(', ')
+        );
       }
     } catch (error) {
       // handle system error
@@ -218,60 +222,72 @@ export const teamFieldValidationSchema = (
     body: object({
       name: string()
         .required()
-        .label('Name')
+        .label(validationLocaleEn.team.label.name)
         .test(
           'duplicateNameValidation',
-          '${label} value is already existed',
+          format(validationLocaleEn.validationMessage.duplicate, '${label}'),
           duplicateNameValidation
         ),
       shortName: string()
         .required()
-        .label('Short Name')
+        .label(validationLocaleEn.team.label.shortName)
         .test(
           'duplicateShortNameValidation',
-          '${label} value is already existed',
+          format(validationLocaleEn.validationMessage.duplicate, '${label}'),
           duplicateShortNameValidation
         ),
       permalink: string()
         .required()
         .matches(
-          /^([a-zA-Z0-9]+-)*[a-zA-Z0-9]+$/,
-          '${label} only accepts alphanumeric connected by dash'
+          constants.PERMALINK_VALIDATION_PATTERN,
+          format(
+            validationLocaleEn.validationMessage.permalinkPattern,
+            '${label}'
+          )
         )
         .lowercase()
-        .label('Permalink')
+        .label(validationLocaleEn.team.label.permalink)
         .test(
           'duplicatePermalinkValidation',
-          '${label} value is already existed',
+          format(validationLocaleEn.validationMessage.duplicate, '${label}'),
           duplicatePermalinkValidation
         ),
       flagIconAdd: isUpdate
         ? string()
             .defined()
             .default('')
-            .label('Flag Icon')
+            .label(validationLocaleEn.team.label.flagIcon)
             .when('flagIconDelete', {
               is: (value: string) => value !== '',
               then: string()
                 .required()
                 .test(
                   'flagIconFilePathValidation',
-                  'Invalid ${label} file path',
+                  format(
+                    validationLocaleEn.validationMessage.invalidUploadFilepath,
+                    '${label}'
+                  ),
                   flagIconFilePathValidation
                 ),
               otherwise: string().defined(),
             })
         : string()
             .required()
-            .label('Flag Icon')
+            .label(validationLocaleEn.team.label.flagIcon)
             .test(
               'flagIconFilePathValidation',
-              'Invalid ${label} file path',
+              format(
+                validationLocaleEn.validationMessage.invalidUploadFilepath,
+                '${label}'
+              ),
               flagIconFilePathValidation
             ),
       flagIconDelete: isUpdate
-        ? string().defined().default('').label('Flag Icon')
-        : string().label('Flag Icon'),
+        ? string()
+            .defined()
+            .default('')
+            .label(validationLocaleEn.team.label.flagIcon)
+        : string().label(validationLocaleEn.team.label.flagIcon),
     }),
   });
 
@@ -280,7 +296,7 @@ export const teamFileValidationSchema: SchemaOf<ITeamFileForm> = object({
     //it's a workaround https://github.com/jquense/yup/pull/1358/files
     flagIcon: mixed<Express.Multer.File>()
       .required()
-      .label('Flag Icon')
+      .label(validationLocaleEn.team.label.flagIcon)
       .test(flagIconFileUploadValidation),
   }),
 });

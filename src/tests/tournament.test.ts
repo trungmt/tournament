@@ -1,4 +1,5 @@
 import request from 'supertest';
+import { format } from 'util';
 import { Document } from 'mongoose';
 import app from '../app';
 import {
@@ -12,6 +13,7 @@ import Tournament from '../models/tournament';
 import { ObjectID } from 'mongodb';
 import { RoundRobinType, StageType } from '../types/global';
 import constants from '../configs/constants';
+import validationLocaleEn from '../configs/locale/validation.en';
 
 // TODO: add locale files to store constants related to validation messages
 
@@ -69,13 +71,29 @@ describe(`create tournament - POST ${createTournamentURL}`, () => {
 
       expect(sut.status).toBe(422);
       expect(sut.body.name).toBe('ValidationError');
-      expect(sut.body.data.name).toBe('Name is a required field');
-      expect(sut.body.data.permalink).toBe('Permalink is a required field');
+      expect(sut.body.data.name).toBe(
+        format(
+          validationLocaleEn.validationMessage.required,
+          validationLocaleEn.tournament.label.name
+        )
+      );
+      expect(sut.body.data.permalink).toBe(
+        format(
+          validationLocaleEn.validationMessage.required,
+          validationLocaleEn.tournament.label.permalink
+        )
+      );
       expect(sut.body.data.groupStageEnable).toBe(
-        'Tournament Type is a required field'
+        format(
+          validationLocaleEn.validationMessage.required,
+          validationLocaleEn.tournament.label.groupStageEnable
+        )
       );
       expect(sut.body.data.finalStageType).toBe(
-        'Final Stage Type is a required field'
+        format(
+          validationLocaleEn.validationMessage.required,
+          validationLocaleEn.tournament.label.finalStageType
+        )
       );
     });
 
@@ -101,13 +119,22 @@ describe(`create tournament - POST ${createTournamentURL}`, () => {
       expect(sut.status).toBe(422);
       expect(sut.body.name).toBe('ValidationError');
       expect(sut.body.data.groupStageType).toBe(
-        'Group Stage Type is a required field'
+        format(
+          validationLocaleEn.validationMessage.required,
+          validationLocaleEn.tournament.label.groupStageType
+        )
       );
       expect(sut.body.data.groupStageGroupSize).toBe(
-        'Number of participants in each group is a required field'
+        format(
+          validationLocaleEn.validationMessage.required,
+          validationLocaleEn.tournament.label.groupStageGroupSize
+        )
       );
       expect(sut.body.data.groupStageGroupAdvancedSize).toBe(
-        'Number of participants advanced from each group is a required field'
+        format(
+          validationLocaleEn.validationMessage.required,
+          validationLocaleEn.tournament.label.groupStageGroupAdvancedSize
+        )
       );
     });
 
@@ -129,19 +156,26 @@ describe(`create tournament - POST ${createTournamentURL}`, () => {
       expect(sut.status).toBe(422);
       expect(sut.body.name).toBe('ValidationError');
       expect(sut.body.data.groupStageGroupSize).toBe(
-        'Number of participants in each group must be a positive number'
+        format(
+          validationLocaleEn.validationMessage.positive,
+          validationLocaleEn.tournament.label.groupStageGroupSize
+        )
       );
       expect(sut.body.data.groupStageGroupAdvancedSize).toBe(
-        'Number of participants advanced from each group must be a positive number'
+        format(
+          validationLocaleEn.validationMessage.positive,
+          validationLocaleEn.tournament.label.groupStageGroupAdvancedSize
+        )
       );
     });
 
     test('should not create tournament because of Number of participants in each group exceed limited of Round Robin group stage', async () => {
       const { ...notRequiredFields } = groupEnabledTournamentForm;
+      const maxGroupStageGroupSize = 20;
       let missingRequiredFieldsTour = {
         ...notRequiredFields,
         groupStageType: StageType.RoundRobin,
-        groupStageGroupSize: 21,
+        groupStageGroupSize: maxGroupStageGroupSize + 1,
       };
       const sut = await request(app)
         .post(createTournamentURL)
@@ -154,16 +188,21 @@ describe(`create tournament - POST ${createTournamentURL}`, () => {
       expect(sut.status).toBe(422);
       expect(sut.body.name).toBe('ValidationError');
       expect(sut.body.data.groupStageGroupSize).toBe(
-        'Number of participants in each group must be less than or equal to 20'
+        format(
+          validationLocaleEn.validationMessage.max,
+          validationLocaleEn.tournament.label.groupStageGroupSize,
+          maxGroupStageGroupSize
+        )
       );
     });
 
     test('should not create tournament because of Number of participants in each group exceed limited of single elimination group stage', async () => {
       const { ...notRequiredFields } = groupEnabledTournamentForm;
+      const maxGroupStageGroupSize = 256;
       let missingRequiredFieldsTour = {
         ...notRequiredFields,
         groupStageType: StageType.SingleElimination,
-        groupStageGroupSize: 257,
+        groupStageGroupSize: maxGroupStageGroupSize + 1,
       };
       const sut = await request(app)
         .post(createTournamentURL)
@@ -176,16 +215,21 @@ describe(`create tournament - POST ${createTournamentURL}`, () => {
       expect(sut.status).toBe(422);
       expect(sut.body.name).toBe('ValidationError');
       expect(sut.body.data.groupStageGroupSize).toBe(
-        'Number of participants in each group must be less than or equal to 256'
+        format(
+          validationLocaleEn.validationMessage.max,
+          validationLocaleEn.tournament.label.groupStageGroupSize,
+          maxGroupStageGroupSize
+        )
       );
     });
 
     test('should not create tournament because of Number of participants in each group exceed limited of double elimination group stage', async () => {
       const { ...notRequiredFields } = groupEnabledTournamentForm;
+      const maxGroupStageGroupSize = 256;
       let missingRequiredFieldsTour = {
         ...notRequiredFields,
         groupStageType: StageType.DoubleElimination,
-        groupStageGroupSize: 257,
+        groupStageGroupSize: maxGroupStageGroupSize + 1,
       };
       const sut = await request(app)
         .post(createTournamentURL)
@@ -198,7 +242,11 @@ describe(`create tournament - POST ${createTournamentURL}`, () => {
       expect(sut.status).toBe(422);
       expect(sut.body.name).toBe('ValidationError');
       expect(sut.body.data.groupStageGroupSize).toBe(
-        'Number of participants in each group must be less than or equal to 256'
+        format(
+          validationLocaleEn.validationMessage.max,
+          validationLocaleEn.tournament.label.groupStageGroupSize,
+          maxGroupStageGroupSize
+        )
       );
     });
 
@@ -220,7 +268,10 @@ describe(`create tournament - POST ${createTournamentURL}`, () => {
       expect(sut.status).toBe(422);
       expect(sut.body.name).toBe('ValidationError');
       expect(sut.body.data.groupStageGroupAdvancedSize).toBe(
-        'Number of participants advanced from each group must be a power of 2 (1,2,4,8,16,...)'
+        format(
+          validationLocaleEn.validationMessage.powerOf2,
+          validationLocaleEn.tournament.label.groupStageGroupAdvancedSize
+        )
       );
     });
 
@@ -242,7 +293,10 @@ describe(`create tournament - POST ${createTournamentURL}`, () => {
       expect(sut.status).toBe(422);
       expect(sut.body.name).toBe('ValidationError');
       expect(sut.body.data.groupStageGroupAdvancedSize).toBe(
-        'Number of participants advanced from each group must be a power of 2 (1,2,4,8,16,...)'
+        format(
+          validationLocaleEn.validationMessage.powerOf2,
+          validationLocaleEn.tournament.label.groupStageGroupAdvancedSize
+        )
       );
     });
 
@@ -264,7 +318,11 @@ describe(`create tournament - POST ${createTournamentURL}`, () => {
       expect(sut.status).toBe(422);
       expect(sut.body.name).toBe('ValidationError');
       expect(sut.body.data.groupStageGroupAdvancedSize).toBe(
-        'Number of participants advanced from each group must be less than Number of participants in each group'
+        format(
+          validationLocaleEn.validationMessage.lessThan,
+          validationLocaleEn.tournament.label.groupStageGroupAdvancedSize,
+          validationLocaleEn.tournament.label.groupStageGroupSize
+        )
       );
     });
 
@@ -291,10 +349,16 @@ describe(`create tournament - POST ${createTournamentURL}`, () => {
       expect(sut.status).toBe(422);
       expect(sut.body.name).toBe('ValidationError');
       expect(sut.body.data.groupStageRoundRobinType).toBe(
-        'Participants play each other is a required field'
+        format(
+          validationLocaleEn.validationMessage.required,
+          validationLocaleEn.tournament.label.groupStageRoundRobinType
+        )
       );
       expect(sut.body.data.finalStageRoundRobinType).toBe(
-        'Participants play each other is a required field'
+        format(
+          validationLocaleEn.validationMessage.required,
+          validationLocaleEn.tournament.label.finalStageRoundRobinType
+        )
       );
     });
 
@@ -317,7 +381,10 @@ describe(`create tournament - POST ${createTournamentURL}`, () => {
       expect(sut.status).toBe(422);
       expect(sut.body.name).toBe('ValidationError');
       expect(sut.body.data.finalStageSingleBronzeEnable).toBe(
-        'Include a match for 3rd place is a required field'
+        format(
+          validationLocaleEn.validationMessage.required,
+          validationLocaleEn.tournament.label.finalStageSingleBronzeEnable
+        )
       );
     });
   });
