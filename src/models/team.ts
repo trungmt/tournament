@@ -1,6 +1,8 @@
+import { format } from 'util';
 import { Schema, model, Model } from 'mongoose';
 import { ObjectID } from 'mongodb';
 import { validatePermalinkPattern } from '../services/ValidationService';
+import validationLocaleEn from '../configs/locale/validation.en';
 
 export interface ITeamModel extends Model<ITeamDoc> {}
 
@@ -35,7 +37,10 @@ const teamSchema = new Schema<ITeamDoc, ITeamModel, ITeamDoc>(
       validate: [
         {
           validator: validatePermalinkPattern,
-          message: 'Permalink only accepts alphanumeric connected by dash',
+          message: format(
+            validationLocaleEn.validationMessage.permalinkPattern,
+            validationLocaleEn.tournament.label.permalink
+          ),
         },
       ],
     },

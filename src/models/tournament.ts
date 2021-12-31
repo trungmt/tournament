@@ -1,3 +1,4 @@
+import { format } from 'util';
 import { ObjectID } from 'mongodb';
 import { Schema, model, Model } from 'mongoose';
 import {
@@ -7,6 +8,7 @@ import {
   getStageTypeValidationMessage,
   isStageTypeSingle,
 } from '../services/ValidationService';
+import validationLocaleEn from '../configs/locale/validation.en';
 
 export interface ITournamentModel extends Model<ITournamentDoc> {}
 
@@ -34,7 +36,10 @@ const tournamentSchema = new Schema<
     validate: [
       {
         validator: validatePermalinkPattern,
-        message: 'Permalink only accepts alphanumeric connected by dash',
+        message: format(
+          validationLocaleEn.validationMessage.permalinkPattern,
+          validationLocaleEn.tournament.label.permalink
+        ),
       },
     ],
   },
