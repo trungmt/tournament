@@ -9,7 +9,7 @@ const PAGINATION_DEFAULT_LIMIT: number = 10;
 const PAGINATION_DEFAULT_PAGE: number = 1;
 const PERMALINK_VALIDATION_PATTERN: RegExp = /^([a-zA-Z0-9]+-)*[a-zA-Z0-9]+$/;
 
-export default {
+const globalConstant = {
   DEFAULT_IMAGE_WIDTH,
   DEFAULT_IMAGE_HEIGHT,
   ENTITY_TEAMS,
@@ -21,3 +21,20 @@ export default {
   PAGINATION_DEFAULT_PAGE,
   PERMALINK_VALIDATION_PATTERN,
 };
+
+const defaultTeamValues: Partial<ITeam> = {};
+
+const defaultTournamentValues: Partial<ITournament> = {
+  groupStageType: null,
+  groupStageGroupSize: null,
+  groupStageGroupAdvancedSize: null,
+  groupStageRoundRobinType: null,
+  finalStageRoundRobinType: null,
+  finalStageSingleBronzeEnable: null,
+};
+
+export const defaultEntityValues = {
+  team: defaultTeamValues,
+  tournament: defaultTournamentValues,
+};
+export default globalConstant;

@@ -9,6 +9,7 @@ import {
   isStageTypeSingle,
 } from '../services/ValidationService';
 import validationLocaleEn from '../configs/locale/validation.en';
+import { defaultEntityValues } from '../configs/constants';
 
 export interface ITournamentModel extends Model<ITournamentDoc> {}
 
@@ -49,32 +50,34 @@ const tournamentSchema = new Schema<
   },
   groupStageType: {
     type: Number,
-    default: null,
+    default: defaultEntityValues.tournament.groupStageType,
     required: function (this: ITournamentDoc) {
       return this.groupStageEnable;
     },
     validate: {
       validator: validateStageType,
-      message: getStageTypeValidationMessage('Group Stage'),
+      message: getStageTypeValidationMessage(
+        validationLocaleEn.tournament.label.groupStageType
+      ),
     },
   },
   groupStageGroupSize: {
     type: Number,
-    default: null,
+    default: defaultEntityValues.tournament.groupStageGroupSize,
     required: function (this: ITournamentDoc) {
       return this.groupStageEnable;
     },
   },
   groupStageGroupAdvancedSize: {
     type: Number,
-    default: null,
+    default: defaultEntityValues.tournament.groupStageGroupAdvancedSize,
     required: function (this: ITournamentDoc) {
       return this.groupStageEnable;
     },
   },
   groupStageRoundRobinType: {
     type: Number,
-    default: null,
+    default: defaultEntityValues.tournament.groupStageRoundRobinType,
     required: function (this: ITournamentDoc) {
       return (
         this.groupStageEnable && isStageTypeRoundRobin(this.groupStageType)
@@ -86,19 +89,21 @@ const tournamentSchema = new Schema<
     required: true,
     validate: {
       validator: validateStageType,
-      message: getStageTypeValidationMessage('Final Stage'),
+      message: getStageTypeValidationMessage(
+        validationLocaleEn.tournament.label.finalStageType
+      ),
     },
   },
   finalStageRoundRobinType: {
     type: Number,
-    default: null,
+    default: defaultEntityValues.tournament.finalStageRoundRobinType,
     required: function (this: ITournamentDoc) {
       return isStageTypeRoundRobin(this.finalStageType);
     },
   },
   finalStageSingleBronzeEnable: {
     type: Boolean,
-    default: null,
+    default: defaultEntityValues.tournament.finalStageSingleBronzeEnable,
     required: function (this: ITournamentDoc) {
       return isStageTypeSingle(this.finalStageType);
     },
