@@ -8,6 +8,7 @@ import TeamRepositoryInterface from '../../repositories/admin/teams/TeamReposito
 import { moveUploadFile, removeUploadFile } from '../../services/FileService';
 import { CustomResponse } from '../../services/CustomResponse';
 import BaseError from '../../exceptions/BaseError';
+import constants from '../../configs/constants';
 
 export interface TeamsListQueryParams extends ListQueryParams {
   query: string;
@@ -37,7 +38,7 @@ export default class TeamController extends AdminAbstractController {
     };
 
     const teamFormData = this.nameTransform(teamData);
-    const flagIconWidth = parseInt(process.env.DEFAULT_IMAGE_WIDTH!);
+    const flagIconWidth = constants.DEFAULT_IMAGE_WIDTH;
     try {
       await moveUploadFile(this.entityName, flagIconAdd, flagIconWidth);
 
@@ -68,13 +69,13 @@ export default class TeamController extends AdminAbstractController {
 
     const teamFormData = this.nameTransform(teamData);
     //TODO: function to prepare env const
-    const flagIconWidth = parseInt(process.env.DEFAULT_IMAGE_WIDTH!);
+    const flagIconWidth = constants.DEFAULT_IMAGE_WIDTH;
 
     try {
       // In case of update, if flagIconAdd is not specify, dont change flagIcon
       if (flagIconAdd) {
         await moveUploadFile(
-          process.env.ENTITY_TEAMS!,
+          constants.ENTITY_TEAMS,
           req.body.flagIconAdd,
           flagIconWidth
         );

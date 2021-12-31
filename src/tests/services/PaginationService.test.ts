@@ -1,8 +1,9 @@
 import PaginationService from '../../services/PaginationService';
+import constants from '../../configs/constants';
 
 describe('constructor', () => {
-  let defaultPaginLimit = parseInt(process.env.PAGINATION_DEFAULT_LIMIT!);
-  let defaultPaginPage = parseInt(process.env.PAGINATION_DEFAULT_PAGE!);
+  let defaultPaginLimit = constants.PAGINATION_DEFAULT_LIMIT;
+  let defaultPaginPage = constants.PAGINATION_DEFAULT_PAGE;
 
   test('limit = NaN string should return default limit', () => {
     const paginationService = new PaginationService('string', 2);
@@ -74,8 +75,8 @@ describe('constructor', () => {
 
 describe('paginate', () => {
   const data = Array.from({ length: 10 }, (_, i) => i + 1);
-  let defaultPaginLimit = parseInt(process.env.PAGINATION_DEFAULT_LIMIT!);
-  let defaultPaginPage = parseInt(process.env.PAGINATION_DEFAULT_PAGE!);
+  let defaultPaginLimit = constants.PAGINATION_DEFAULT_LIMIT;
+  let defaultPaginPage = constants.PAGINATION_DEFAULT_PAGE;
 
   test('Should return first page with undefined limit, page', () => {
     const paginationService = new PaginationService();

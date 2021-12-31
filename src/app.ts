@@ -7,6 +7,10 @@ import adminRouter from './routers/admin/admin';
 import { logException, responseException } from './middlewares/exception';
 import { removeOldTempFiles } from './services/FileService';
 import path from 'path';
+import { checkRequiredEnv } from './configs';
+
+checkRequiredEnv();
+
 require('./db/mongoose'); // move to providers/
 
 const app = express();

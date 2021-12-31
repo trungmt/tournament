@@ -1,6 +1,8 @@
 import { Schema, Model, Document, Types, model } from 'mongoose';
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+
+import configs from '../configs';
 // TODO: set up function to generate responseJSON which is object with
 // user, accessToken, refreshToken
 
@@ -122,7 +124,7 @@ userSchema.statics.checkRefreshToken = async (
 ): Promise<IUserDoc & Document<any, any, IUserDoc>> => {
   const userJSON = jwt.verify(
     refreshToken,
-    process.env.REFRESH_TOKEN_SECRET!
+    configs.refreshTokenSecret
   ) as IUserJson;
   if (!userJSON.username) {
     throw new Error('Unable to refresh accessToken');
@@ -153,20 +155,14 @@ userSchema.methods.toJSON = function (): IUserJson {
   };
 };
 
-userSchema.methods.generateAccessToken = function (): string {
-  const userJSON = this.toJSON();
-
-  return generateToken(userJSON, process.env.ACCESS_TOKEN_SECRET!, '15s');
-};
-
 userSchema.methods.generateRefreshToken = async function (): Promise<string> {
   const userJSON = this.toJSON();
   const user = this;
 
   const refreshToken = generateToken(
     userJSON,
-    process.env.REFRESH_TOKEN_SECRET!,
-    process.env.REFRESH_TOKEN_EXPIRY!
+    configs.refreshTokenSecret,
+    configs.refreshTokenExpiry
   );
 
   user.refreshTokens = user.refreshTokens?.concat({ refreshToken });
@@ -180,8 +176,8 @@ userSchema.methods.generateAccessToken = function (): string {
 
   const accessToken = generateToken(
     userJSON,
-    process.env.ACCESS_TOKEN_SECRET!,
-    process.env.ACCESS_TOKEN_EXPIRY!
+    configs.accessTokenSecret,
+    configs.accessTokenExpiry!
   );
   return accessToken;
 };

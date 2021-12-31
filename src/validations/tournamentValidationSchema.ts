@@ -1,3 +1,4 @@
+import { format } from 'util';
 import { Document, FilterQuery } from 'mongoose';
 import {
   object,
@@ -19,6 +20,8 @@ import {
   getStageTypeValidationMessage,
 } from '../services/ValidationService';
 import { RoundRobinType, StageType } from '../types/global';
+import constants, { defaultEntityValues } from '../configs/constants';
+import validationLocaleEn from '../configs/locale/validation.en';
 
 const duplicatePermalinkValidation: TestFunction<
   string | undefined,
@@ -138,29 +141,34 @@ export const tournamentFieldValidationSchema = (
     body: object({
       name: string()
         .required()
-        .label('Name')
+        .label(validationLocaleEn.tournament.label.name)
         .test(
           'duplicateNameValidation',
-          '${label} value is already existed',
+          format(validationLocaleEn.validationMessage.duplicate, '${label}'),
           duplicateNameValidation
         ),
       permalink: string()
         .required()
-        .label('Permalink')
+        .label(validationLocaleEn.tournament.label.permalink)
         .matches(
-          /^([a-zA-Z0-9]+-)*[a-zA-Z0-9]+$/,
-          '${label} only accepts alphanumeric connected by dash'
+          constants.PERMALINK_VALIDATION_PATTERN,
+          format(
+            validationLocaleEn.validationMessage.permalinkPattern,
+            '${label}'
+          )
         )
         .lowercase()
         .test(
           'duplicatePermalinkValidation',
-          '${label} value is already existed',
+          format(validationLocaleEn.validationMessage.duplicate, '${label}'),
           duplicatePermalinkValidation
         ),
-      groupStageEnable: boolean().required().label('Tournament Type'),
+      groupStageEnable: boolean()
+        .required()
+        .label(validationLocaleEn.tournament.label.groupStageEnable),
       groupStageType: mixed<StageType | null>()
-        .default(null)
-        .label('Group Stage Type')
+        .default(defaultEntityValues.tournament.groupStageType!)
+        .label(validationLocaleEn.tournament.label.groupStageType)
         .when('groupStageEnable', {
           is: (groupStageEnableVal: boolean) => groupStageEnableVal === true,
           then: mixed<StageType>()
@@ -172,12 +180,12 @@ export const tournamentFieldValidationSchema = (
             ),
           otherwise: mixed<StageType>()
             .nullable()
-            .default(null)
-            .transform(() => null),
+            .default(defaultEntityValues.tournament.groupStageType!)
+            .transform(() => defaultEntityValues.tournament.groupStageType!),
         }),
       groupStageGroupSize: number()
-        .default(null) //TODO: define constants
-        .label('Number of participants in each group')
+        .default(defaultEntityValues.tournament.groupStageGroupSize!) //TODO: define constants
+        .label(validationLocaleEn.tournament.label.groupStageGroupSize)
         .when('groupStageEnable', {
           is: (groupStageEnableVal: boolean) => groupStageEnableVal === true,
           then: number()
@@ -198,12 +206,14 @@ export const tournamentFieldValidationSchema = (
             }),
           otherwise: number()
             .nullable()
-            .default(null)
-            .transform(() => null), //TODO: define constants
+            .default(defaultEntityValues.tournament.groupStageGroupSize!)
+            .transform(
+              () => defaultEntityValues.tournament.groupStageGroupSize!
+            ), //TODO: define constants
         }),
       groupStageGroupAdvancedSize: number()
-        .default(null) //TODO: define constants
-        .label('Number of participants advanced from each group')
+        .default(defaultEntityValues.tournament.groupStageGroupAdvancedSize!) //TODO: define constants
+        .label(validationLocaleEn.tournament.label.groupStageGroupAdvancedSize)
         .when('groupStageEnable', {
           is: (groupStageEnableVal: boolean) => groupStageEnableVal === true,
           then: number()
@@ -211,7 +221,11 @@ export const tournamentFieldValidationSchema = (
             .positive()
             .lessThan(
               ref('groupStageGroupSize'),
-              '${label} must be less than Number of participants in each group'
+              format(
+                validationLocaleEn.validationMessage.lessThan,
+                '${label}',
+                validationLocaleEn.tournament.label.groupStageGroupSize
+              )
             )
             .when('groupStageType', {
               is: (groupStageTypeVal: StageType) =>
@@ -221,18 +235,23 @@ export const tournamentFieldValidationSchema = (
                 .nullable()
                 .test(
                   'numberOnlyPowerOf2Validation',
-                  '${label} must be a power of 2 (1,2,4,8,16,...)',
+                  format(
+                    validationLocaleEn.validationMessage.powerOf2,
+                    '${label}'
+                  ),
                   numberOnlyPowerOf2Validation
                 ),
               otherwise: number().nullable(),
             }),
           otherwise: number()
             .nullable()
-            .transform(() => null), //TODO: define constants
+            .transform(
+              () => defaultEntityValues.tournament.groupStageGroupAdvancedSize!
+            ), //TODO: define constants
         }),
       groupStageRoundRobinType: mixed<RoundRobinType | null>()
-        .default(null)
-        .label('Participants play each other')
+        .default(defaultEntityValues.tournament.groupStageRoundRobinType!)
+        .label(validationLocaleEn.tournament.label.groupStageRoundRobinType)
         .when(['groupStageEnable', 'groupStageType'], {
           is: (groupStageEnableVal: boolean, groupStageTypeVal: StageType) =>
             groupStageEnableVal === true &&
@@ -240,30 +259,38 @@ export const tournamentFieldValidationSchema = (
           then: mixed<RoundRobinType>().required(),
           otherwise: mixed<RoundRobinType>()
             .nullable()
-            .transform(() => null),
+            .transform(
+              () => defaultEntityValues.tournament.groupStageRoundRobinType!
+            ),
         }),
-      finalStageType: mixed<StageType>().required().label('Final Stage Type'),
+      finalStageType: mixed<StageType>()
+        .required()
+        .label(validationLocaleEn.tournament.label.finalStageType),
       finalStageRoundRobinType: mixed<RoundRobinType | null>()
-        .default(null)
-        .label('Participants play each other')
+        .default(defaultEntityValues.tournament.finalStageRoundRobinType!)
+        .label(validationLocaleEn.tournament.label.finalStageRoundRobinType)
         .when('finalStageType', {
           is: (finalStageTypeVal: StageType) =>
             isStageTypeRoundRobin(finalStageTypeVal),
           then: mixed<RoundRobinType>().nullable().required(),
           otherwise: mixed<RoundRobinType>()
             .nullable()
-            .transform(() => null),
+            .transform(
+              () => defaultEntityValues.tournament.finalStageRoundRobinType!
+            ),
         }),
       finalStageSingleBronzeEnable: boolean()
-        .default(null)
-        .label('Include a match for 3rd place')
+        .default(defaultEntityValues.tournament.finalStageSingleBronzeEnable!)
+        .label(validationLocaleEn.tournament.label.finalStageSingleBronzeEnable)
         .when('finalStageType', {
           is: (finalStageTypeVal: StageType) =>
             isStageTypeSingle(finalStageTypeVal),
           then: boolean().nullable().required(),
           otherwise: boolean()
             .nullable()
-            .transform(() => null),
+            .transform(
+              () => defaultEntityValues.tournament.finalStageSingleBronzeEnable!
+            ),
         }),
     }),
   });

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import User, { IUserJson } from '../models/user';
+import configs from '../configs';
 
 const auth = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -10,7 +11,7 @@ const auth = async (req: Request, res: Response, next: NextFunction) => {
     }
     const userJSON = jwt.verify(
       accessToken!,
-      process.env.ACCESS_TOKEN_SECRET!
+      configs.accessTokenSecret
     ) as IUserJson;
     const user = await User.findOne({
       username: userJSON.username,

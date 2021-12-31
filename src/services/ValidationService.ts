@@ -1,7 +1,10 @@
+import { format } from 'util';
 import { StageType } from '../types/global';
+import constants from '../configs/constants';
+import validationLocaleEn from '../configs/locale/validation.en';
 
 export const validatePermalinkPattern = (permalink: string): boolean =>
-  /^([a-zA-Z0-9]+-)*[a-zA-Z0-9]+$/.test(permalink);
+  constants.PERMALINK_VALIDATION_PATTERN.test(permalink);
 
 export const validateStageType = (type: StageType | null): boolean => {
   if (type === null) return true;
@@ -18,7 +21,13 @@ export const isStageTypeDouble = (type: StageType | null): boolean =>
   type === StageType.DoubleElimination;
 
 export const getStageTypeValidationMessage = (label: string): string => {
-  return `${label} have to be one of these types: ${Object.keys(StageType)
+  const allowedStageTypeStr = Object.keys(StageType)
     .filter(k => isNaN(Number(k)))
-    .join(', ')}`;
+    .join(', ');
+
+  return format(
+    validationLocaleEn.validationMessage.notAllowStageType,
+    label,
+    allowedStageTypeStr
+  );
 };

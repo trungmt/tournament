@@ -3,6 +3,8 @@ import { RequestHandler, Request, Response, NextFunction } from 'express';
 import { ObjectID } from 'mongodb';
 import multer, { MulterError, Multer } from 'multer';
 import { verifyFileExtension } from '../services/FileService';
+import configs from '../configs';
+import constants from '../configs/constants';
 
 /**
  * Function to generate Multer instance that consists configs
@@ -23,7 +25,7 @@ const generateDiskUploadConfig = (
       },
     }),
     limits: {
-      fileSize: parseInt(process.env.DEFAULT_IMAGE_SIZE_LIMIT!),
+      fileSize: constants.DEFAULT_IMAGE_SIZE_LIMIT,
       files: 1,
     },
     fileFilter(req, file, cb) {
@@ -32,12 +34,7 @@ const generateDiskUploadConfig = (
       if (!req.errors) req.errors = {};
       if (!req.body) req.body = {};
 
-      if (
-        !verifyFileExtension(
-          fileExt,
-          process.env.ACCEPT_IMAGE_EXTENSION_PATTERN!
-        )
-      ) {
+      if (!verifyFileExtension(fileExt, constants.ACCEPT_IMAGE_EXTENSION)) {
         req.errors![
           fieldName
         ] = `File type not allowed. Please upload image with these types: jpg, jpeg, png, gif, tiff`;
@@ -53,7 +50,7 @@ export const uploadSingleFile = (
   fieldName: string,
   entityName: string | undefined = undefined
 ): RequestHandler => {
-  let destination = process.env.UPLOAD_TEMP_FILE_DIR;
+  let destination = configs.uploadTempFileDir;
   if (typeof destination !== 'undefined' && typeof entityName !== 'undefined') {
     destination += `${entityName}`;
   }

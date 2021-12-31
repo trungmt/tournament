@@ -8,9 +8,10 @@ import {
   teamFieldValidationSchema,
   teamFileValidationSchema,
 } from '../../validations/teamValidationSchema';
+import constants from '../../configs/constants';
 
 const teamsRouter = express.Router();
-const entityName = process.env.ENTITY_TEAMS!;
+const entityName = constants.ENTITY_TEAMS;
 
 const service = new TeamService();
 const Team = new TeamController(entityName, service);

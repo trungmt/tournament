@@ -1,3 +1,4 @@
+import { format } from 'util';
 import request from 'supertest';
 import { Document } from 'mongoose';
 import app from '../app';
@@ -9,6 +10,8 @@ import {
 import { removeOldTempFiles } from '../services/FileService';
 import Team from '../models/team';
 import { ObjectID } from 'mongodb';
+import constants from '../configs/constants';
+import validationLocaleEn from '../configs/locale/validation.en';
 
 // TODO: add locale files to store constants related to validation messages
 
@@ -55,7 +58,12 @@ describe(`POST ${uploadFlagIconURL}`, () => {
       .expect(422);
 
     expect(response.body.name).toBe('ValidationError');
-    expect(response.body.data.flagIcon).toBe('Flag Icon is a required field');
+    expect(response.body.data.flagIcon).toBe(
+      format(
+        validationLocaleEn.validationMessage.required,
+        validationLocaleEn.team.label.flagIcon
+      )
+    );
   });
 
   test('Should response error in case empty file attached', async () => {
@@ -67,7 +75,12 @@ describe(`POST ${uploadFlagIconURL}`, () => {
       .expect(422);
 
     expect(response.body.name).toBe('ValidationError');
-    expect(response.body.data.flagIcon).toBe('Flag Icon file is empty.');
+    expect(response.body.data.flagIcon).toBe(
+      format(
+        validationLocaleEn.validationMessage.emptyUploadFile,
+        validationLocaleEn.team.label.flagIcon
+      )
+    );
   });
 
   test('Should response error in case upload file with exceed filesize', async () => {
@@ -79,7 +92,9 @@ describe(`POST ${uploadFlagIconURL}`, () => {
       .expect(422);
 
     expect(response.body.name).toBe('ValidationError');
-    expect(response.body.data.flagIcon).toBe('File too large');
+    expect(response.body.data.flagIcon).toBe(
+      validationLocaleEn.validationMessage.fileTooLarge
+    );
   });
 
   test('Should response error in case upload file with wrong extension', async () => {
@@ -87,12 +102,15 @@ describe(`POST ${uploadFlagIconURL}`, () => {
       .post(uploadFlagIconURL)
       .set('Authorization', `Bearer ${userOneToken}`)
       .set('Connection', 'keep-alive')
-      .attach('flagIcon', 'src/tests/fixtures/images/teams/england.txt')
-      .expect(422);
+      .attach('flagIcon', 'src/tests/fixtures/images/teams/england.txt');
 
+    expect(response.status).toBe(422);
     expect(response.body.name).toBe('ValidationError');
     expect(response.body.data.flagIcon).toBe(
-      'File type not allowed. Please upload image with these types: jpg, jpeg, png, gif, tiff'
+      format(
+        validationLocaleEn.validationMessage.notAllowFileType,
+        constants.ACCEPT_IMAGE_EXTENSION.join(', ')
+      )
     );
   });
 
@@ -141,9 +159,24 @@ describe(`POST ${createTeamURL}`, () => {
       .expect(422);
 
     expect(response.body.name).toBe('ValidationError');
-    expect(response.body.data.name).toBe('Name is a required field');
-    expect(response.body.data.shortName).toBe('Short Name is a required field');
-    expect(response.body.data.permalink).toBe('Permalink is a required field');
+    expect(response.body.data.name).toBe(
+      format(
+        validationLocaleEn.validationMessage.required,
+        validationLocaleEn.team.label.name
+      )
+    );
+    expect(response.body.data.shortName).toBe(
+      format(
+        validationLocaleEn.validationMessage.required,
+        validationLocaleEn.team.label.shortName
+      )
+    );
+    expect(response.body.data.permalink).toBe(
+      format(
+        validationLocaleEn.validationMessage.required,
+        validationLocaleEn.team.label.permalink
+      )
+    );
   });
 
   describe('Should not create new team with wrong permalink pattern', () => {
@@ -162,7 +195,10 @@ describe(`POST ${createTeamURL}`, () => {
 
       expect(response.body.name).toBe('ValidationError');
       expect(response.body.data.permalink).toBe(
-        'Permalink only accepts alphanumeric connected by dash'
+        format(
+          validationLocaleEn.validationMessage.permalinkPattern,
+          validationLocaleEn.team.label.permalink
+        )
       );
     });
 
@@ -181,7 +217,10 @@ describe(`POST ${createTeamURL}`, () => {
 
       expect(response.body.name).toBe('ValidationError');
       expect(response.body.data.permalink).toBe(
-        'Permalink only accepts alphanumeric connected by dash'
+        format(
+          validationLocaleEn.validationMessage.permalinkPattern,
+          validationLocaleEn.team.label.permalink
+        )
       );
     });
   });
@@ -200,7 +239,12 @@ describe(`POST ${createTeamURL}`, () => {
         .expect(422);
 
       expect(response.body.name).toBe('ValidationError');
-      expect(response.body.data.name).toBe('Name value is already existed');
+      expect(response.body.data.name).toBe(
+        format(
+          validationLocaleEn.validationMessage.duplicate,
+          validationLocaleEn.team.label.name
+        )
+      );
     });
 
     test('Duplicate in permalink', async () => {
@@ -216,7 +260,10 @@ describe(`POST ${createTeamURL}`, () => {
 
       expect(response.body.name).toBe('ValidationError');
       expect(response.body.data.permalink).toBe(
-        'Permalink value is already existed'
+        format(
+          validationLocaleEn.validationMessage.duplicate,
+          validationLocaleEn.team.label.permalink
+        )
       );
     });
   });
@@ -234,7 +281,10 @@ describe(`POST ${createTeamURL}`, () => {
 
     expect(response.body.name).toBe('ValidationError');
     expect(response.body.data.flagIconAdd).toBe(
-      'Flag Icon is a required field'
+      format(
+        validationLocaleEn.validationMessage.required,
+        validationLocaleEn.team.label.flagIcon
+      )
     );
   });
 
@@ -251,7 +301,12 @@ describe(`POST ${createTeamURL}`, () => {
       .expect(422);
 
     expect(response.body.name).toBe('ValidationError');
-    expect(response.body.data.flagIconAdd).toBe('Invalid Flag Icon file path');
+    expect(response.body.data.flagIconAdd).toBe(
+      format(
+        validationLocaleEn.validationMessage.invalidUploadFilepath,
+        validationLocaleEn.team.label.flagIcon
+      )
+    );
   });
 
   test('Should create a new team', async () => {
@@ -321,9 +376,8 @@ describe(`DELETE ${deleteTeamURL}`, () => {
 
 describe(`GET ${listTeamURL}`, () => {
   let teamList: ITeamDoc[];
-  let defaultPaginLimit = parseInt(process.env.PAGINATION_DEFAULT_LIMIT!);
-  let defaultPaginPage = parseInt(process.env.PAGINATION_DEFAULT_PAGE!);
-  console.log('defaultPaginLimit', defaultPaginLimit);
+  let defaultPaginLimit = constants.PAGINATION_DEFAULT_LIMIT;
+  let defaultPaginPage = constants.PAGINATION_DEFAULT_PAGE;
   beforeEach(async () => {
     const initTeamListDBResult = await setupTeamListDatabase();
     teamList = initTeamListDBResult;
