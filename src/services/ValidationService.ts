@@ -1,7 +1,8 @@
 import { StageType } from '../types/global';
+import constants from '../configs/constants';
 
 export const validatePermalinkPattern = (permalink: string): boolean =>
-  /^([a-zA-Z0-9]+-)*[a-zA-Z0-9]+$/.test(permalink);
+  constants.PERMALINK_VALIDATION_PATTERN.test(permalink);
 
 export const validateStageType = (type: StageType | null): boolean => {
   if (type === null) return true;

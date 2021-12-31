@@ -59,7 +59,7 @@ export const verifyFileExtension = (
   acceptedExtension: RegExp | string[] | string
 ): boolean => {
   if (Array.isArray(acceptedExtension)) {
-    acceptedExtension = `/^${acceptedExtension.join('|')}$/`;
+    acceptedExtension = `^(.)?${acceptedExtension.join('|')}$`;
   }
 
   const acceptedExtensionRegex = new RegExp(acceptedExtension);

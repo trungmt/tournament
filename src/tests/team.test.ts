@@ -1,3 +1,4 @@
+import { format } from 'util';
 import request from 'supertest';
 import { Document } from 'mongoose';
 import app from '../app';
@@ -10,6 +11,7 @@ import { removeOldTempFiles } from '../services/FileService';
 import Team from '../models/team';
 import { ObjectID } from 'mongodb';
 import constants from '../configs/constants';
+import validationLocaleEn from '../configs/locale/validation.en';
 
 // TODO: add locale files to store constants related to validation messages
 
@@ -88,12 +90,15 @@ describe(`POST ${uploadFlagIconURL}`, () => {
       .post(uploadFlagIconURL)
       .set('Authorization', `Bearer ${userOneToken}`)
       .set('Connection', 'keep-alive')
-      .attach('flagIcon', 'src/tests/fixtures/images/teams/england.txt')
-      .expect(422);
+      .attach('flagIcon', 'src/tests/fixtures/images/teams/england.txt');
 
+    expect(response.status).toBe(422);
     expect(response.body.name).toBe('ValidationError');
     expect(response.body.data.flagIcon).toBe(
-      'File type not allowed. Please upload image with these types: jpg, jpeg, png, gif, tiff'
+      format(
+        validationLocaleEn.validationMessage.notAllowFileType,
+        constants.ACCEPT_IMAGE_EXTENSION.join(', ')
+      )
     );
   });
 

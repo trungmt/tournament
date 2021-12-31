@@ -4,9 +4,10 @@ const ENTITY_TEAMS: string = 'teams';
 const ENTITY_USERS: string = 'users';
 const ENTITY_TOURNAMENTS: string = 'tournament';
 const DEFAULT_IMAGE_SIZE_LIMIT: number = 5242880;
-const ACCEPT_IMAGE_EXTENSION_PATTERN: RegExp = /^(.)?(jpg|jpeg|png|gif|tiff)$/;
+const ACCEPT_IMAGE_EXTENSION: string[] = ['jpg', 'jpeg', 'png', 'gif', 'tiff'];
 const PAGINATION_DEFAULT_LIMIT: number = 10;
 const PAGINATION_DEFAULT_PAGE: number = 1;
+const PERMALINK_VALIDATION_PATTERN: RegExp = /^([a-zA-Z0-9]+-)*[a-zA-Z0-9]+$/;
 
 export default {
   DEFAULT_IMAGE_WIDTH,
@@ -15,7 +16,8 @@ export default {
   ENTITY_USERS,
   ENTITY_TOURNAMENTS,
   DEFAULT_IMAGE_SIZE_LIMIT,
-  ACCEPT_IMAGE_EXTENSION_PATTERN,
+  ACCEPT_IMAGE_EXTENSION,
   PAGINATION_DEFAULT_LIMIT,
   PAGINATION_DEFAULT_PAGE,
+  PERMALINK_VALIDATION_PATTERN,
 };

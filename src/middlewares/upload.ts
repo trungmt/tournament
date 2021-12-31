@@ -34,9 +34,7 @@ const generateDiskUploadConfig = (
       if (!req.errors) req.errors = {};
       if (!req.body) req.body = {};
 
-      if (
-        !verifyFileExtension(fileExt, constants.ACCEPT_IMAGE_EXTENSION_PATTERN!)
-      ) {
+      if (!verifyFileExtension(fileExt, constants.ACCEPT_IMAGE_EXTENSION)) {
         req.errors![
           fieldName
         ] = `File type not allowed. Please upload image with these types: jpg, jpeg, png, gif, tiff`;
