@@ -1,8 +1,6 @@
 import { NextFunction, Request, Response, RequestHandler } from 'express';
-import { mixed, object, string, boolean } from 'yup';
 import BaseError from '../../exceptions/BaseError';
 import TournamentRepositoryInterface from '../../repositories/admin/tournaments/TournamentRepositoryInterface';
-import { StageType } from '../../types/global';
 import AdminAbstractController from '../AdminAbstractController';
 import {
   DetailFormParams,

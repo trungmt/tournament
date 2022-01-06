@@ -1,3 +1,8 @@
+/**
+ * *Doc (ex. ITournamentDoc) type/interface used for typehint what will be stored to db
+ * *    (ex. ITournament) type/interface used for common typehint, to extend the type for special purpose, like form type
+ */
+interface IDoc {}
 interface ITournament {
   name: string;
   permalink: string;
@@ -10,8 +15,7 @@ interface ITournament {
   finalStageRoundRobinType: import('./index').RoundRobinType | null;
   finalStageSingleBronzeEnable: boolean | null;
 }
-
-interface ITournamentDoc extends ITournament {
+interface ITournamentDoc extends ITournament, IDoc {
   nameDisplay?: string;
 }
 
@@ -26,18 +30,9 @@ interface ITeam {
   permalink: string;
   flagIcon: string;
 }
-interface ITeamDoc extends ITeam {
+interface ITeamDoc extends ITeam, IDoc {
   nameDisplay: string;
   shortNameDisplay: string;
-}
-
-interface IGroup {
-  name: string;
-  permalink: string;
-  flagIcon: string;
-}
-interface IGroupDoc extends IGroup {
-  nameDisplay: string;
 }
 
 type ITeamForm = Omit<ITeam, 'flagIcon'> & {
@@ -54,7 +49,28 @@ interface ITeamFileForm {
   };
 }
 
-type IDoc = ITournamentDoc | IGroupDoc | ITeamDoc;
+interface IGroupParticipant {
+  teamId: import('mongoose').Schema.Types.ObjectId;
+  seed: number;
+  win: number;
+  lose: number;
+  draw: number;
+  point: number;
+  tiedPoint: number;
+  scoreFor: number;
+  scoreAgainst: number;
+  scoreDifference: number;
+  // TODO: matches history
+}
+interface IGroup {
+  tournamentId: import('mongoose').Schema.Types.ObjectId;
+  name: string;
+  isGroupStage: boolean;
+}
+interface IGroupDoc extends IGroup, IDoc {
+  nameValidate: string;
+  participants: IGroupParticipant[];
+}
 
 type RepositoryResultType<T extends IDoc> = import('mongoose').HydratedDocument<
   T,
